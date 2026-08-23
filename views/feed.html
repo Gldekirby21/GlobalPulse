@@ -1,0 +1,105 @@
+<!-- TAB 2: TRAVEL SOCIAL FEED ("PULSE FEED") -->
+<section class="view-section" id="view-feed">
+  <!-- 24-Hour Stories Carousel -->
+  <div class="pulse-stories-bar" id="pulseStoriesBar"></div>
+
+  <!-- Feed Grid Layout -->
+  <div class="feed-layout">
+    <!-- Main Column: Composer & Stream -->
+    <main class="feed-main-col">
+      <!-- Post Composer -->
+      <div class="feed-composer" id="feedComposer">
+        <div class="composer-top">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Your Avatar" class="composer-avatar" id="composerUserAvatar" />
+          <div class="composer-input-wrap">
+            <textarea id="composerTextarea" class="composer-textarea" placeholder="What's on your travel mind? Share stories, tips, or check-ins..."></textarea>
+            <div class="composer-tags-preview" id="composerTagsPreview"></div>
+            <div class="composer-photo-preview-wrap" id="composerPhotoPreviewWrap" hidden>
+              <img src="" alt="Preview" class="composer-photo-preview" id="composerPhotoPreview" />
+              <button type="button" class="composer-remove-photo-btn" id="composerRemovePhotoBtn" aria-label="Remove photo"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="composer-bottom">
+          <div class="composer-quick-actions">
+            <input type="file" id="composerPhotoInput" accept="image/*" style="display:none;" />
+            <button type="button" class="composer-tool-btn" id="composerPhotoBtn">
+              <i class="fa-solid fa-image" style="color:var(--accent-emerald);"></i> <span>Photo</span>
+            </button>
+            <button type="button" class="composer-tool-btn" id="composerCheckinBtn">
+              <i class="fa-solid fa-location-dot" style="color:var(--accent-rose);"></i> <span>Check In</span>
+            </button>
+            <button type="button" class="composer-tool-btn" id="composerFeelingBtn">
+              <i class="fa-solid fa-face-smile" style="color:var(--accent-amber);"></i> <span>Feeling</span>
+            </button>
+          </div>
+          <button type="button" class="composer-submit-btn" id="composerSubmitBtn">
+            <i class="fa-solid fa-paper-plane"></i> <span>Post</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Feed Filter Bar -->
+      <div class="feed-filter-bar">
+        <button type="button" class="feed-filter-btn active" data-feed-filter="all">
+          <i class="fa-solid fa-globe"></i> <span>All Stories</span>
+        </button>
+        <button type="button" class="feed-filter-btn" data-feed-filter="friends">
+          <i class="fa-solid fa-user-group"></i> <span>Friends Only</span>
+        </button>
+        <button type="button" class="feed-filter-btn" data-feed-filter="mine">
+          <i class="fa-solid fa-user"></i> <span>My Posts</span>
+        </button>
+      </div>
+
+      <!-- Dynamic Feed Stream -->
+      <div class="feed-stream" id="feedStream"></div>
+    </main>
+
+    <!-- Right Column: Sidebar Widgets -->
+    <aside class="feed-side-col">
+      <!-- Suggested Explorers -->
+      <div class="feed-widget-card">
+        <div class="widget-header">
+          <h4><i class="fa-solid fa-user-plus" style="color:var(--accent-cyan);"></i> Suggested Explorers</h4>
+        </div>
+        <div class="suggested-explorers-list" id="suggestedExplorersList">
+          <div class="suggested-user-row">
+            <span class="avatar-dot" style="--avatar:#06b6d4; width:34px; height:34px; font-size:0.8rem;">A</span>
+            <div class="suggested-user-info">
+              <strong>Aoi Tanaka</strong>
+              <small>Tokyo, Japan &bull; 850 XP</small>
+            </div>
+          </div>
+          <div class="suggested-user-row">
+            <span class="avatar-dot" style="--avatar:#ec4899; width:34px; height:34px; font-size:0.8rem;">M</span>
+            <div class="suggested-user-info">
+              <strong>Marco Rivera</strong>
+              <small>Manila, Philippines &bull; 620 XP</small>
+            </div>
+          </div>
+          <div class="suggested-user-row">
+            <span class="avatar-dot" style="--avatar:#8b5cf6; width:34px; height:34px; font-size:0.8rem;">E</span>
+            <div class="suggested-user-info">
+              <strong>Elena Rostova</strong>
+              <small>Paris, France &bull; 1.2k XP</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trending Travel Topics -->
+      <div class="feed-widget-card">
+        <div class="widget-header">
+          <h4><i class="fa-solid fa-fire" style="color:var(--accent-rose);"></i> Trending Destinations</h4>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.82rem;">
+          <div><strong style="color:var(--accent-cyan);">#JapanSpring2026</strong> <span style="color:var(--text-muted);">&bull; 42 posts</span></div>
+          <div><strong style="color:var(--accent-cyan);">#BoracaySunsets</strong> <span style="color:var(--text-muted);">&bull; 29 posts</span></div>
+          <div><strong style="color:var(--accent-cyan);">#SwissAlpsHike</strong> <span style="color:var(--text-muted);">&bull; 18 posts</span></div>
+          <div><strong style="color:var(--accent-cyan);">#BangkokStreetFood</strong> <span style="color:var(--text-muted);">&bull; 15 posts</span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>

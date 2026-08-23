@@ -612,6 +612,22 @@ img {
   display: block;
 }
 
+/* Full-Bleed Mode (Map & Geocode): container loses padding/max-width so the
+   layout spans edge-to-edge with zero padding */
+body.tab-map #mainContent {
+  max-width: 100%;
+  padding: 0;
+}
+
+body.tab-map #view-map {
+  padding-bottom: 0;
+}
+
+/* Footer is exclusive to the Explore tab — every other section solos the space */
+body.footer-hidden .site-footer {
+  display: none;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -883,25 +899,28 @@ img {
   }
 }
 
-/* Tab 2: Map & Geocoding */
+/* Tab 3: Map & Geocoding — Pure Full-Bleed Sidebar Layout */
 .map-layout {
   display: grid;
   grid-template-columns: 360px 1fr;
-  gap: 1.5rem;
-  height: calc(100vh - 180px);
+  gap: 0;
+  height: calc(100vh - var(--nav-height));
   min-height: 560px;
 }
 
+/* True application sidebar: flush against the map, square edges, solid panel */
 .map-sidebar {
-  background: var(--bg-glass-card);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  border-top: none;
+  border-right: 1px solid var(--border-glass);
+  border-bottom: none;
+  border-left: none;
+  border-radius: 0;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
   overflow-y: auto;
-  backdrop-filter: blur(12px);
 }
 
 .sidebar-title-group {
@@ -1004,11 +1023,11 @@ img {
 }
 
 .map-container-wrapper {
-  border-radius: var(--radius-md);
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid var(--border-glass);
+  border: none;
+  border-left: 1px solid var(--border-glass);
   position: relative;
-  box-shadow: var(--shadow-md);
 }
 
 #leafletMap {
@@ -1016,6 +1035,76 @@ img {
   height: 100%;
   min-height: 480px;
   z-index: 10;
+}
+
+/* Sidebar Expand / Collapse Toggle (floats on the map, always reachable) */
+.map-sidebar-toggle {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1100;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass-strong);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
+}
+
+.map-sidebar-toggle:hover {
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  transform: scale(1.08);
+}
+
+.map-sidebar-toggle i {
+  transition: transform var(--transition-normal);
+}
+
+/* Collapsed state: sidebar fully hides, map solos the entire row.
+   Grid must drop to a single column or the map gets stuck in the
+   old 360px sidebar column. */
+.map-layout.sidebar-collapsed {
+  grid-template-columns: 1fr;
+}
+
+.map-layout.sidebar-collapsed .map-sidebar {
+  display: none;
+}
+
+.map-layout.sidebar-collapsed .map-sidebar-toggle i {
+  transform: rotate(180deg);
+}
+
+/* Slide-in entrance whenever the sidebar expands back */
+.map-layout:not(.sidebar-collapsed) .map-sidebar {
+  animation: sidebarSlideIn 0.28s ease-out;
+}
+
+@keyframes sidebarSlideIn {
+  from {
+    margin-left: -360px;
+    opacity: 0;
+  }
+
+  to {
+    margin-left: 0;
+    opacity: 1;
+  }
+}
+
+/* Nudge Leaflet's zoom control below the sidebar toggle (both live top-left) */
+#view-map .leaflet-top.leaflet-left {
+  top: 3.4rem;
 }
 
 /* Map Overlay Controls */
@@ -1046,6 +1135,77 @@ img {
 .map-layer-btn.active {
   background: var(--accent-cyan);
   color: #ffffff;
+}
+
+/* ==========================================================================
+   COMMUNITY EXPLORER MAP MARKERS
+   ========================================================================== */
+.community-marker {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+  transition: transform 0.2s ease;
+}
+
+.community-marker:hover {
+  transform: scale(1.18);
+  z-index: 1000 !important;
+}
+
+.community-ping {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: var(--avatar, #06b6d4);
+  opacity: 0.55;
+  animation: pulsePing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+.community-avatar {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--avatar, #06b6d4);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 12px var(--avatar, #06b6d4);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+}
+
+.community-avatar-img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 12px var(--avatar, #06b6d4);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: var(--bg-surface-elevated);
+}
+
+@keyframes pulsePing {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+
+  70%,
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
 }
 
 /* Tab 3: Compare View */
@@ -1718,6 +1878,17 @@ img {
   .map-layout {
     grid-template-columns: 1fr;
     height: auto;
+  }
+
+  /* Stacked mode: sidebar sits above the map, divider flips to bottom edge */
+  .map-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border-glass);
+    max-height: 45vh;
+  }
+
+  .map-container-wrapper {
+    border-left: none;
   }
 
   #leafletMap {

@@ -187,6 +187,11 @@ class SocialFeed {
     this.currentFeeling = null;
     this.renderComposerPreview();
 
+    // Ensure profile row exists in database before inserting post
+    if (!supabaseService.profile && supabaseService.user) {
+      supabaseService.profile = await supabaseService.ensureProfile(supabaseService.user);
+    }
+
     const { data, error } = await supabaseService.client
       .from('posts')
       .insert(postPayload)
@@ -194,8 +199,12 @@ class SocialFeed {
       .maybeSingle();
 
     if (error) {
-      console.warn('Post creation error:', error.message);
-      window.globalPulseApp?.showToast?.('Could not save post to cloud. Stored locally.', 'warning');
+      console.error('❌ Post creation error from Supabase:', error.message, error);
+      if (error.code === '42P01' || error.message?.includes('does not exist')) {
+        window.globalPulseApp?.showToast?.('Please run MASTER_SCHEMA.sql in Supabase SQL editor! ⚠️', 'warning');
+      } else {
+        window.globalPulseApp?.showToast?.(`Could not save post to cloud: ${error.message}`, 'warning');
+      }
       return;
     }
 
@@ -206,6 +215,7 @@ class SocialFeed {
         this.renderPosts();
       }
       gamificationService.grantBadge('explorer');
+      window.globalPulseApp?.showToast?.('Post published to GlobalPulse! 🌟', 'success');
     }
   }
 
@@ -226,19 +236,33 @@ class SocialFeed {
   async loadPosts() {
     let postsData = [];
     if (supabaseService.configured) {
-      const { data, error } = await supabaseService.client
-        .from('posts')
-        .select(`
-          id, user_id, content, image_url, location_name, location_cca3, feeling_activity, created_at,
-          profiles (id, username, full_name, avatar_url, avatar_color, travel_style),
-          post_reactions (id, user_id, reaction_type),
-          post_comments (id, user_id, comment_text, created_at, profiles(username, avatar_url, avatar_color))
-        `)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      try {
+        const { data, error } = await supabaseService.client
+          .from('posts')
+          .select(`
+            id, user_id, content, image_url, location_name, location_cca3, feeling_activity, created_at,
+            profiles (id, username, full_name, avatar_url, avatar_color, travel_style),
+            post_reactions (id, user_id, reaction_type),
+            post_comments (id, user_id, comment_text, created_at)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(50);
 
-      if (!error && data && data.length) {
-        postsData = data;
+        if (error) {
+          console.warn('Primary posts query failed, trying simple select:', error.message);
+          const simple = await supabaseService.client
+            .from('posts')
+            .select('*, profiles(id, username, full_name, avatar_url, avatar_color)')
+            .order('created_at', { ascending: false })
+            .limit(50);
+          if (simple.data && simple.data.length) {
+            postsData = simple.data;
+          }
+        } else if (data && data.length) {
+          postsData = data;
+        }
+      } catch (err) {
+        console.error('loadPosts exception:', err);
       }
     }
 

@@ -1,0 +1,57 @@
+<!-- TAB 5: AI GEO GUIDE ASSISTANT -->
+<section class="view-section" id="view-ai">
+  <div class="ai-guide-wrapper">
+    <!-- AI Header -->
+    <div class="ai-header">
+      <div class="ai-bot-info">
+        <div class="ai-avatar">
+          <i class="fa-solid fa-compass"></i>
+        </div>
+        <div>
+          <h3 style="font-size: 1.1rem; margin-bottom: 0.1rem;">GlobalPulse AI Guide</h3>
+          <p
+            style="font-size: 0.78rem; color: var(--accent-emerald); display:flex; align-items:center; gap: 0.3rem;">
+            <span class="pulse-dot" style="width:6px; height:6px;"></span> Geography & Travel Intelligence Active
+          </p>
+        </div>
+      </div>
+      <button class="btn-secondary" id="btnConfigGeminiKey" style="padding: 0.45rem 0.9rem; font-size: 0.8rem;">
+        <i class="fa-solid fa-key"></i> Gemini API Key
+      </button>
+    </div>
+
+    <!-- Chat Body -->
+    <div class="ai-chat-body" id="aiChatBody">
+      <div class="ai-msg bot">
+        <div class="ai-avatar"><i class="fa-solid fa-robot"></i></div>
+        <div class="ai-bubble">
+          👋 <strong>Kumusta! Welcome to GlobalPulse AI Guide!</strong><br><br>
+          I can provide you with instant travel recommendations, culture insights, climate seasons, and geography
+          facts for over 250+ countries.
+          How can I assist your journey today?
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggestion Chips -->
+    <div class="ai-suggestions-bar">
+      <button class="ai-chip" data-prompt="Tell me about Philippines culture, best spots, and local food">🇵🇭
+        Explore Philippines</button>
+      <button class="ai-chip" data-prompt="What is the best season and weather to visit Japan?">🌸 Best time for
+        Japan</button>
+      <button class="ai-chip" data-prompt="What are the top budget-friendly countries to travel to?">💰 Cheapest
+        travel destinations</button>
+      <button class="ai-chip" data-prompt="What are the world's largest countries by land area?">🌍 Largest
+        countries</button>
+    </div>
+
+    <!-- Chat Input Bar -->
+    <div class="ai-input-bar">
+      <input type="text" id="aiChatInput" class="ai-input"
+        placeholder="Ask about any country, culture, visa tips, or travel recommendations..." />
+      <button class="ai-send-btn" id="aiSendBtn" aria-label="Send Message">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</section>

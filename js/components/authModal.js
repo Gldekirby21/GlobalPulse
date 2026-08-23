@@ -88,6 +88,9 @@ class AuthModal {
             );
             return;
         }
+        if (!this.modal) this.modal = document.getElementById('authModal');
+        if (!this.modal) return;
+
         this.switchTab(tab);
         this.showError('');
         this.modal.hidden = false;
@@ -95,8 +98,11 @@ class AuthModal {
     }
 
     close() {
+        if (!this.modal) this.modal = document.getElementById('authModal');
+        if (!this.modal) return;
+
         this.modal.classList.remove('open');
-        setTimeout(() => { this.modal.hidden = true; }, 250);
+        setTimeout(() => { if (this.modal) this.modal.hidden = true; }, 250);
     }
 
     switchTab(tab) {

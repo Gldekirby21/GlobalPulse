@@ -360,24 +360,29 @@ class MapManager {
    * @param {Array} users - rows from supabaseService.fetchSharedLocations()
    * @param {string|null} myUserId - current user id (excluded from layer)
    * @param {{lat:number, lon:number}|null} myCoords - for distance labels
+   * @param {object} options - { guest: boolean }
    */
   updateCommunityMarkers(users, myUserId = null, myCoords = null, options = {}) {
     this.communityUsers = users || [];
 
     if (!this.map) return;
 
-    // Teaser mode (guests): blurred markers, no personal details
-    const teaser = !!options.teaser;
-
     this.communityMarkers.clearLayers();
+
+    // If user is a guest, do not render other users on the map (only own location radar)
+    if (options.guest) {
+      return;
+    }
 
     this.communityUsers.forEach((u) => {
       if (!Number.isFinite(u.lat) || !Number.isFinite(u.lon)) return;
       if (myUserId && u.user_id === myUserId) return; // own pulse marker already exists
 
-      const name = u.profiles?.username || 'Explorer';
-      const color = u.profiles?.avatar_color || '#06b6d4';
-      const initial = name.charAt(0).toUpperCase();
+      const prof = u.profiles || {};
+      const name = prof.full_name || prof.username || 'Explorer';
+      const color = prof.avatar_color || '#06b6d4';
+      const avatarUrl = prof.avatar_url;
+      const initial = (prof.username || name || '?').charAt(0).toUpperCase();
       const minsAgo = Math.max(0, Math.round((Date.now() - new Date(u.last_seen)) / 60000));
       const place = [u.city, u.country].filter(Boolean).join(', ') || 'Somewhere on Earth';
 
@@ -386,42 +391,59 @@ class MapManager {
         const km = this._haversineKm(myCoords.lat, myCoords.lon, u.lat, u.lon);
         const label = km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
         distanceHtml = `
-          <div class="map-popup-distance">
+          <div class="map-popup-distance" style="font-size:0.75rem; color:var(--accent-cyan); margin-top:0.25rem;">
             <i class="fa-solid fa-ruler"></i> ${label} away from you
           </div>`;
       }
 
+      const avatarMarkup = avatarUrl
+        ? `<img src="${avatarUrl}" class="community-avatar-img" alt="${name}" />`
+        : `<span class="community-avatar">${initial}</span>`;
+
       const icon = L.divIcon({
         className: 'custom-leaflet-div',
         html: `
-          <div class="community-marker ${teaser ? 'teaser' : ''}" style="--avatar:${color}" title="${teaser ? 'Community Explorer' : name}">
+          <div class="community-marker" style="--avatar:${color}" title="${name} (Live Explorer)">
             <span class="community-ping"></span>
-            <span class="community-avatar">${initial}</span>
+            ${avatarMarkup}
           </div>
         `,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
       });
 
       const marker = L.marker([u.lat, u.lon], { icon });
-      if (teaser) {
-        marker.bindTooltip('Sign in to connect', { direction: 'top' });
-        this.communityMarkers.addLayer(marker);
-        return;
-      }
-      marker
-        .bindPopup(`
-          <div class="map-popup-card">
-            <span class="map-popup-badge"><i class="fa-solid fa-users-rays"></i> Community Explorer</span>
-            <div class="map-popup-title">${name}</div>
-            <div class="map-popup-address">${place}</div>
-            ${distanceHtml}
-            <div style="font-size:0.72rem; color:#64748b;">
-              <i class="fa-solid fa-clock"></i> seen ${minsAgo === 0 ? 'just now' : `${minsAgo} min ago`}
-              ${u.precision_mode === 'city' ? ' &bull; city-level precision' : ''}
+
+      marker.bindPopup(`
+        <div class="map-popup-card" style="min-width:190px;">
+          <div style="display:flex; align-items:center; gap:0.65rem; margin-bottom:0.4rem;">
+            ${avatarUrl
+              ? `<img src="${avatarUrl}" style="width:34px; height:34px; border-radius:50%; object-fit:cover; border:2px solid var(--accent-cyan);" />`
+              : `<span class="avatar-dot" style="--avatar:${color}; width:34px; height:34px; font-size:0.85rem;">${initial}</span>`
+            }
+            <div>
+              <div class="map-popup-title" style="font-size:0.9rem; font-weight:800; margin:0;">${name}</div>
+              <span class="map-popup-badge" style="font-size:0.65rem; padding:0.1rem 0.4rem; background:rgba(16,185,129,0.12); color:var(--accent-emerald); border:1px solid rgba(16,185,129,0.3); border-radius:999px;">
+                <i class="fa-solid fa-circle" style="font-size:0.45rem; margin-right:2px;"></i> Online Live
+              </span>
             </div>
           </div>
-        `);
+          <div class="map-popup-address" style="font-size:0.78rem; color:var(--text-secondary);"><i class="fa-solid fa-location-dot" style="color:var(--accent-cyan); font-size:0.75rem;"></i> ${place}</div>
+          ${distanceHtml}
+          <div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">
+            <i class="fa-solid fa-clock"></i> active ${minsAgo === 0 ? 'just now' : `${minsAgo}m ago`}
+            ${u.precision_mode === 'city' ? ' &bull; city precision' : ''}
+          </div>
+          <div style="display:flex; gap:0.4rem; margin-top:0.65rem;">
+            <button type="button" class="btn-primary btn-sm" onclick="window.globalPulseApp?.chatPanel?.openWith('${u.user_id}')" style="flex:1; padding:0.35rem 0.6rem; font-size:0.75rem; border-radius:var(--radius-full); font-weight:700;">
+              <i class="fa-solid fa-comment-dots"></i> Chat
+            </button>
+            <button type="button" class="btn-secondary btn-sm" onclick="window.globalPulseApp?.passport?.openProfileCard('${u.user_id}')" style="padding:0.35rem 0.6rem; font-size:0.75rem; border-radius:var(--radius-full);" title="View Passport Profile">
+              <i class="fa-solid fa-id-card"></i>
+            </button>
+          </div>
+        </div>
+      `);
 
       marker.on('click', () => this._flyToSafe([u.lat, u.lon], Math.max(this.map.getZoom(), 6), 1.2));
       this.communityMarkers.addLayer(marker);

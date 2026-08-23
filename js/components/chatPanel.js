@@ -561,13 +561,22 @@ class ChatPanel {
         });
     }
 
+    _escapeHtml(str = '') {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     _messageHtml(m, me, msgId = null) {
         const mine = m.sender_id === me;
         const id = msgId || m.id || '';
         const idAttr = id ? `data-msg-id="${id}"` : '';
         return `
       <div class="chat-msg ${mine ? 'mine' : 'theirs'}" ${idAttr}>
-        <div class="chat-bubble">${m.body.replace(/</g, '&lt;')}</div>
+        <div class="chat-bubble">${this._escapeHtml(m.body)}</div>
         <small>${new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
       </div>`;
     }

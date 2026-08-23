@@ -81,12 +81,30 @@ class PulseStories {
     this.renderStoriesBar();
   }
 
+  escapeHtml(str = '') {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  safeUrl(url = '') {
+    if (!url || typeof url !== 'string') return '';
+    const clean = url.trim();
+    if (/^(https?:\/\/|data:image\/|\/)/i.test(clean)) {
+      return clean;
+    }
+    return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80';
+  }
+
   renderStoriesBar() {
     if (!this.container) return;
 
     const me = supabaseService.user;
     const myProf = supabaseService.profile || {};
-    const myAvatar = myProf.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80';
+    const myAvatar = this.safeUrl(myProf.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80');
 
     let html = `
       <!-- Add Story Card -->
@@ -105,12 +123,13 @@ class PulseStories {
 
     html += this.stories.map((story, idx) => {
       const p = story.profiles || {};
-      const name = p.full_name || p.username || 'Explorer';
-      const avatarSrc = p.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
+      const name = this.escapeHtml(p.full_name || p.username || 'Explorer');
+      const avatarSrc = this.safeUrl(p.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80');
+      const mediaUrl = this.safeUrl(story.media_url);
 
       return `
         <div class="story-card" data-story-idx="${idx}">
-          <img src="${story.media_url}" alt="${name}'s Story" class="story-card-bg" />
+          <img src="${mediaUrl}" alt="${name}'s Story" class="story-card-bg" />
           <div class="story-avatar-wrap">
             <div class="story-avatar-ring">
               <img src="${avatarSrc}" alt="${name}" class="story-avatar-img" />

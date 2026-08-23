@@ -287,6 +287,15 @@ class Passport {
 
   /* -------------------------- Profile card ---------------------------- */
 
+  _escapeHtml(str = '') {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   async openProfileCard(userId) {
     if (!supabaseService.configured || !userId) return;
 
@@ -304,6 +313,8 @@ class Passport {
 
     const lvl = gamificationService.levelFor(prof.xp || 0);
     const badges = Array.isArray(prof.badges) ? prof.badges : [];
+    const username = this._escapeHtml(prof.username || 'Explorer');
+    const avatarColor = this._escapeHtml(prof.avatar_color || '#06b6d4');
 
     this.ensureModal();
     this.modal.hidden = false;
@@ -311,11 +322,11 @@ class Passport {
 
     this.modal.querySelector('#passportBody').innerHTML = `
       <div class="passport-header">
-        <span class="avatar-dot" style="--avatar:${prof.avatar_color || '#06b6d4'}; width:52px; height:52px; font-size:1.3rem;">
-          ${(prof.username || '?').charAt(0).toUpperCase()}
+        <span class="avatar-dot" style="--avatar:${avatarColor}; width:52px; height:52px; font-size:1.3rem;">
+          ${username.charAt(0).toUpperCase()}
         </span>
         <div>
-          <h3>${prof.username || 'Explorer'}</h3>
+          <h3>${username}</h3>
           <p class="passport-level"><i class="fa-solid fa-bolt"></i> ${lvl.name} • ${prof.xp || 0} XP</p>
         </div>
       </div>
@@ -327,7 +338,7 @@ class Passport {
         <div class="badge-row">
           ${badges.map((key) => {
       const b = gamificationBadges[key];
-      return b ? `<span class="badge-chip" title="${b.label}"><i class="fa-solid ${b.icon}"></i> ${b.label}</span>` : '';
+      return b ? `<span class="badge-chip" title="${this._escapeHtml(b.label)}"><i class="fa-solid ${this._escapeHtml(b.icon)}"></i> ${this._escapeHtml(b.label)}</span>` : '';
     }).join('')}
         </div>` : ''}
     `;

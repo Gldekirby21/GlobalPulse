@@ -1,0 +1,94 @@
+<!-- TAB 1: COUNTRIES EXPLORER -->
+<section class="view-section active-view" id="view-explore">
+
+  <!-- Hero Banner Section (Explore Tab Only) -->
+  <div class="hero-section">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-badge">
+          <i class="fa-solid fa-satellite-dish"></i> Live Geospatial Intelligence
+        </div>
+        <h1 class="hero-title">
+          Explore the World with <br />
+          <span class="gradient-text">Real-Time Geography & Geocoding</span>
+        </h1>
+        <p class="hero-subtitle">
+          Harnessing <strong>REST Countries API</strong>, <strong>Nominatim OpenStreetMap</strong>, and <strong>IP
+            Geolocation</strong> into one unified interactive dashboard.
+        </p>
+      </div>
+
+      <!-- Hero Dynamic Location Card -->
+      <div class="hero-location-card" id="heroLocationCard">
+        <div class="location-card-header">
+          <span class="location-pill"><i class="fa-solid fa-spinner fa-spin"></i> Detecting Pulse...</span>
+        </div>
+        <div class="location-info-main">
+          <h3 class="location-city-country">Detecting Location...</h3>
+          <span class="location-ip-badge">Retrieving coordinates from IP...</span>
+        </div>
+        <div class="location-stats-grid">
+          <div class="loc-stat-item">
+            <span class="loc-stat-label">Coordinates</span>
+            <span class="loc-stat-val">--</span>
+          </div>
+          <div class="loc-stat-item">
+            <span class="loc-stat-label">Currency</span>
+            <span class="loc-stat-val">--</span>
+          </div>
+          <div class="loc-stat-item">
+            <span class="loc-stat-label">Timezone</span>
+            <span class="loc-stat-val">--</span>
+          </div>
+          <div class="loc-stat-item">
+            <span class="loc-stat-label">Region</span>
+            <span class="loc-stat-val">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filters Toolbar -->
+  <div class="controls-bar">
+    <div class="search-input-wrapper">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="countrySearchInput" class="search-input"
+        placeholder="Search by country, capital, language, or ISO code..." />
+    </div>
+
+    <div class="filter-group">
+      <select id="countrySortSelect" class="custom-select">
+        <option value="name_asc">Sort: Name (A - Z)</option>
+        <option value="name_desc">Sort: Name (Z - A)</option>
+        <option value="pop_desc">Sort: Population (High - Low)</option>
+        <option value="pop_asc">Sort: Population (Low - High)</option>
+        <option value="area_desc">Sort: Land Area (Large - Small)</option>
+        <option value="area_asc">Sort: Land Area (Small - Large)</option>
+      </select>
+      <span class="view-meta" id="countriesCountMeta">Loading countries...</span>
+    </div>
+  </div>
+
+  <!-- Quick Region Filter Pills -->
+  <div class="region-pills" role="tablist">
+    <button class="region-pill-btn active" data-region="All">All Continents</button>
+    <button class="region-pill-btn" data-region="Asia">Asia</button>
+    <button class="region-pill-btn" data-region="Europe">Europe</button>
+    <button class="region-pill-btn" data-region="Americas">Americas</button>
+    <button class="region-pill-btn" data-region="Africa">Africa</button>
+    <button class="region-pill-btn" data-region="Oceania">Oceania</button>
+    <button class="region-pill-btn" data-region="Antarctic">Antarctic</button>
+  </div>
+
+  <!-- Countries Cards Grid -->
+  <div class="countries-grid" id="countriesGrid">
+    <!-- Skeleton Loaders -->
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+  </div>
+</section>

@@ -10,6 +10,7 @@
  */
 
 import config, { isSupabaseConfigured } from '../config.js';
+import { ipService } from './ipService.js';
 
 const AVATAR_COLORS = [
     '#06b6d4', '#3b82f6', '#8b5cf6', '#10b981',
@@ -17,7 +18,7 @@ const AVATAR_COLORS = [
 ];
 
 const PRESENCE_WINDOW_MS = 2 * 60 * 1000; // "live" = seen in the last 2 min
-const HEARTBEAT_MS = 60 * 1000; // Throttle presence refresh to once per 60s
+const HEARTBEAT_MS = 30 * 1000; // Live auto-sync presence & coordinates every 30 seconds
 const CITY_GRID_DEG = 0.05; // ~5.5 km
 
 const safeStorage = {
@@ -95,10 +96,15 @@ class SupabaseService {
     async _handleSession(session) {
         if (session?.user) {
             this.user = session.user;
+            console.log('%c🔑 [Auth Session] User logged in: ' + (this.user.email || this.user.id) + ' — Triggering auto location save...', 'color: #38bdf8; font-weight: bold;');
             this.profile = await this.ensureProfile(this.user);
+            // Automatically save user coordinates on every login / restored session
+            await this.publishLocation(true);
+            this.startHeartbeat();
         } else {
             this.user = null;
             this.profile = null;
+            this.stopHeartbeat();
         }
         if (this._onAuthChange) {
             this._onAuthChange(this.user ? { user: this.user, profile: this.profile } : null);
@@ -191,43 +197,59 @@ class SupabaseService {
      * Username source: Google metadata → signup metadata → email prefix.
      */
     async ensureProfile(user) {
-        const { data: existing } = await this.client
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .maybeSingle();
-
-        if (existing) return existing;
-
-        const metaName =
-            user.user_metadata?.username ||
-            user.user_metadata?.name ||
-            user.user_metadata?.full_name ||
-            (user.email ? user.email.split('@')[0] : 'explorer');
-
-        const baseName = String(metaName).replace(/\s+/g, '_').slice(0, 24) || 'explorer';
-
-        // Retry with a numeric suffix if the username is taken (unique constraint)
-        for (let attempt = 0; attempt < 4; attempt++) {
-            const candidate = attempt === 0
-                ? baseName
-                : `${baseName}_${Math.floor(100 + Math.random() * 900)}`;
-
-            const { data, error } = await this.client
+        if (!user) return null;
+        try {
+            console.log('👤 [ensureProfile] Checking profile for user ID:', user.id);
+            const { data: existing, error: selectErr } = await this.client
                 .from('profiles')
-                .insert({
-                    id: user.id,
-                    username: candidate,
-                    avatar_color: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
-                })
-                .select()
-                .single();
+                .select('*')
+                .eq('id', user.id)
+                .maybeSingle();
 
-            if (!error) return data;
-            if (error.code !== '23505') { // not a username conflict — surface it
-                console.error('Profile creation failed:', error.message);
-                return null;
+            if (selectErr) {
+                console.error('❌ [ensureProfile] Select error:', selectErr.message);
             }
+
+            if (existing) {
+                console.log('👤 [ensureProfile] Found existing profile in cloud:', existing.username);
+                return existing;
+            }
+
+            const metaName =
+                user.user_metadata?.username ||
+                user.user_metadata?.name ||
+                user.user_metadata?.full_name ||
+                (user.email ? user.email.split('@')[0] : 'explorer');
+
+            const baseName = String(metaName).replace(/\s+/g, '_').slice(0, 24) || 'explorer';
+
+            // Retry with a numeric suffix if the username is taken (unique constraint)
+            for (let attempt = 0; attempt < 4; attempt++) {
+                const candidate = attempt === 0
+                    ? baseName
+                    : `${baseName}_${Math.floor(100 + Math.random() * 900)}`;
+
+                const { data, error } = await this.client
+                    .from('profiles')
+                    .insert({
+                        id: user.id,
+                        username: candidate,
+                        avatar_color: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
+                    })
+                    .select()
+                    .single();
+
+                if (!error && data) {
+                    console.log('👤 [ensureProfile] Successfully created profile in cloud:', data);
+                    return data;
+                }
+                if (error && error.code !== '23505') { // not a username conflict — surface it
+                    console.error('❌ [ensureProfile] Profile creation failed:', error.message, error);
+                    return null;
+                }
+            }
+        } catch (e) {
+            console.error('❌ [ensureProfile] Exception:', e);
         }
         return null;
     }
@@ -251,48 +273,119 @@ class SupabaseService {
     }
 
     async publishLocation(force = false) {
-        if (!this.configured || !this.user || !this.sharingEnabled) return false;
-        const raw = this._coordsProvider?.();
-        if (!raw || !Number.isFinite(raw.lat) || !Number.isFinite(raw.lon)) return false;
+        console.log('📍 [publishLocation] Called (force=' + force + ', sharingEnabled=' + this.sharingEnabled + ', configured=' + this.configured + ')');
 
-        const { lat, lon } = this._roundForPrecision(raw.lat, raw.lon);
+        if (!this.configured) {
+            console.warn('📍 publishLocation: Supabase is not configured.');
+            return false;
+        }
+        if (!this.user) {
+            console.warn('📍 publishLocation: No authenticated user.');
+            return false;
+        }
+
+        // Auto-enable sharing for authenticated users
+        if (this.sharingEnabled === false) {
+            this.sharingEnabled = true;
+            try { localStorage.setItem('globalpulse_sharing', 'true'); } catch (e) { }
+        }
+
+        // 1. Get coordinates from provider or fallback directly to ipService
+        let raw = this._coordsProvider?.();
+        console.log('📍 [publishLocation] Coordinates from provider:', raw);
+
+        if (!raw || !Number.isFinite(Number(raw.lat)) || !Number.isFinite(Number(raw.lon))) {
+            console.log('📍 [publishLocation] Provider had no coords, detecting via ipService...');
+            try {
+                raw = await ipService.detectLocation();
+                console.log('📍 [publishLocation] ipService detected:', raw);
+            } catch (e) {
+                console.warn('Fallback location detection error:', e);
+            }
+        }
+
+        if (!raw || !Number.isFinite(Number(raw.lat)) || !Number.isFinite(Number(raw.lon))) {
+            console.warn('📍 publishLocation: No valid coordinates found to save.');
+            return false;
+        }
+
+        const rawLat = Number(raw.lat);
+        const rawLon = Number(raw.lon);
+
+        const { lat, lon } = this._roundForPrecision(rawLat, rawLon);
         const hash = `${lat.toFixed(4)}_${lon.toFixed(4)}_${raw.city || ''}_${this.precisionMode}`;
         const now = Date.now();
 
-        // Throttle: don't re-upload if coordinates are unchanged and published recently
-        if (!force && hash === this._lastPublishedHash && (now - this._lastPublishedTime < 45000)) {
+        // Throttle: don't re-upload if coordinates are unchanged and published recently (< 25s)
+        if (!force && hash === this._lastPublishedHash && (now - this._lastPublishedTime < 25000)) {
+            console.log('📍 [publishLocation] Throttled (unchanged coords recently published).');
             return true;
         }
 
-        const { error } = await this.client
+        // 2. Ensure profile row exists in database (foreign key requirement)
+        await this.ensureProfile(this.user);
+
+        // 3. Upsert user location into Supabase
+        const payload = {
+            user_id: this.user.id,
+            lat,
+            lon,
+            city: raw.city || null,
+            country: raw.country || null,
+            country_code: raw.countryCode || raw.country_code || null,
+            precision_mode: this.precisionMode,
+            sharing_enabled: true,
+            last_seen: new Date().toISOString()
+        };
+
+        console.group('%c📍 [GlobalPulse Location Sync] Posting Coordinates to Supabase...', 'color: #06b6d4; font-weight: bold; font-size: 1.05em;');
+        console.log('%c👤 User:', 'color: #3b82f6; font-weight: bold;', {
+            id: this.user.id,
+            email: this.user.email,
+            username: this.profile?.username || 'Explorer'
+        });
+        console.log('%c🛰️ Coordinates Payload:', 'color: #10b981; font-weight: bold;', payload);
+        console.groupEnd();
+
+        const { data, error } = await this.client
             .from('user_locations')
-            .upsert({
-                user_id: this.user.id,
-                lat,
-                lon,
-                city: raw.city || null,
-                country: raw.country || null,
-                country_code: raw.countryCode || null,
-                precision_mode: this.precisionMode,
-                sharing_enabled: true,
-                last_seen: new Date().toISOString()
-            }, { onConflict: 'user_id' });
+            .upsert(payload, { onConflict: 'user_id' })
+            .select();
 
         if (error) {
-            console.warn('Location publish failed:', error.message);
+            console.group('%c❌ [GlobalPulse Location Sync] FAILED to Post Location to Supabase', 'color: #ef4444; font-weight: bold; font-size: 1.05em;');
+            console.error('Error Code:', error.code);
+            console.error('Error Message:', error.message);
+            console.error('Error Details:', error.details || error.hint || error);
+            console.groupEnd();
+
+            if (error.code === '42P01' || error.message?.includes('does not exist')) {
+                window.globalPulseApp?.showToast?.('Please run MASTER_SCHEMA.sql in Supabase SQL editor! ⚠️', 'warning');
+            } else if (error.message?.includes('violates row-level security')) {
+                window.globalPulseApp?.showToast?.('RLS blocked location save. Run MASTER_SCHEMA.sql in SQL editor! ⚠️', 'warning');
+            }
             return false;
         }
+
+        console.group('%c✅ [GlobalPulse Location Sync] POSTED TO SUPABASE SUCCESS!', 'color: #10b981; font-weight: bold; font-size: 1.05em;');
+        console.log('%c📡 Database Table:', 'color: #8b5cf6; font-weight: bold;', 'public.user_locations');
+        console.log('%c📦 Saved Record in Cloud:', 'color: #06b6d4; font-weight: bold;', data?.[0] || payload);
+        console.log('%c🕒 Timestamp:', 'color: #f59e0b;', new Date().toLocaleTimeString());
+        console.groupEnd();
+
         this._lastPublishedHash = hash;
         this._lastPublishedTime = now;
         return true;
     }
 
-    /** Periodically refresh last_seen while the tab is visible. */
+    /** Periodically auto-sync location coordinates every 30 seconds while logged in. */
     startHeartbeat() {
         this.stopHeartbeat();
-        this.heartbeatTimer = setInterval(() => {
-            if (document.visibilityState === 'visible') {
-                this.publishLocation();
+        console.log('💓 [Location Heartbeat] 30-Second live location auto-sync is ACTIVE');
+        this.heartbeatTimer = setInterval(async () => {
+            if (this.user && this.sharingEnabled) {
+                console.log('💓 [Location Heartbeat] 30s tick: Auto-updating location coordinates in Supabase...');
+                await this.publishLocation(true);
             }
         }, HEARTBEAT_MS);
     }
@@ -337,7 +430,7 @@ class SupabaseService {
         const cutoff = new Date(Date.now() - PRESENCE_WINDOW_MS).toISOString();
         const { data, error } = await this.client
             .from('user_locations')
-            .select('user_id, lat, lon, city, country, country_code, precision_mode, last_seen, profiles!inner ( username, avatar_color )')
+            .select('user_id, lat, lon, city, country, country_code, precision_mode, last_seen, profiles!inner ( username, avatar_color, avatar_url, full_name )')
             .eq('sharing_enabled', true)
             .gte('last_seen', cutoff);
 

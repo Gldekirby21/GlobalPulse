@@ -1,0 +1,75 @@
+<!-- TAB 3: INTERACTIVE MAP & NOMINATIM GEOCODER -->
+<section class="view-section" id="view-map">
+  <div class="map-layout">
+    <!-- Sidebar Search & Reverse Geocode Results -->
+    <aside class="map-sidebar">
+      <div class="sidebar-title-group">
+        <i class="fa-solid fa-location-crosshairs"></i>
+        <div>
+          <h3>Nominatim Finder</h3>
+          <p style="font-size:0.8rem; color:var(--text-muted);">Forward & Reverse Geocoder</p>
+        </div>
+      </div>
+
+      <!-- Forward Search Box -->
+      <div class="nominatim-search-box">
+        <i class="fa-solid fa-search"></i>
+        <input type="text" id="nominatimInput" class="nominatim-search-input"
+          placeholder="Search address, landmark, city (e.g. Rizal Park)..." />
+      </div>
+
+      <!-- Forward Search Results List -->
+      <div class="nominatim-results-list" id="nominatimResults"></div>
+
+      <!-- Reverse Geocode Info Box (Map Click) -->
+      <div class="reverse-geo-card" id="reverseGeoInfoCard">
+        <div class="reverse-geo-header"><i class="fa-solid fa-hand-pointer"></i> Map Click Reverse Geocode</div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+          Click anywhere on the interactive map to discover the exact address, municipality, postal code, and
+          country coordinates!
+        </p>
+      </div>
+
+      <!-- Community Pulse (Live Explorer Locations) -->
+      <div class="community-panel" id="communityPanel">
+        <div class="community-panel-header">
+          <i class="fa-solid fa-users-rays"></i>
+          <div>
+            <h3>Community Pulse</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted);"><span id="communityCount">0</span> explorers live
+              now</p>
+          </div>
+          <button class="community-toggle-btn active" id="communityToggleBtn" title="Show/hide community markers">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+        <div class="community-list" id="communityList">
+          <p class="community-empty" id="communityEmpty">Sign in to see and share live explorer locations.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:auto; font-size:0.75rem; color:var(--text-muted); line-height:1.4;">
+        <i class="fa-solid fa-circle-info"></i> Powered by <strong>OpenStreetMap Nominatim</strong> with zero API
+        key required.
+      </div>
+    </aside>
+
+    <!-- Leaflet Map Container -->
+    <div class="map-container-wrapper">
+      <!-- Sidebar Expand / Collapse Toggle -->
+      <button class="map-sidebar-toggle" id="mapSidebarToggle" aria-expanded="true" title="Collapse sidebar"
+        aria-label="Expand or collapse sidebar">
+        <i class="fa-solid fa-angles-left"></i>
+      </button>
+
+      <!-- Floating Map Layer Switcher -->
+      <div class="map-floating-bar">
+        <button class="map-layer-btn active" data-layer="dark">Carto Voyager</button>
+        <button class="map-layer-btn" data-layer="cartoDark">Dark Matter</button>
+        <button class="map-layer-btn" data-layer="osm">OSM Street</button>
+      </div>
+
+      <div id="leafletMap"></div>
+    </div>
+  </div>
+</section>

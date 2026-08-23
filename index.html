@@ -76,7 +76,7 @@
           <i class="fa-solid fa-globe"></i>
           <span>Explore</span>
         </button>
-        <button class="nav-tab-btn" data-tab="feed" id="tabBtnFeed">
+        <button class="nav-tab-btn" data-tab="feed" id="tabBtnFeed" hidden>
           <i class="fa-solid fa-newspaper"></i>
           <span>Feed</span>
         </button>
@@ -129,7 +129,7 @@
   </header>
 
   <!-- Main Workspace -->
-  <main class="container">
+  <main class="container" id="mainContent">
 
     <!-- TAB 1: COUNTRIES EXPLORER -->
     <section class="view-section active-view" id="view-explore">
@@ -238,13 +238,16 @@
           <!-- Post Composer -->
           <div class="feed-composer" id="feedComposer">
             <div class="composer-top">
-              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Your Avatar" class="composer-avatar" id="composerUserAvatar" />
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+                alt="Your Avatar" class="composer-avatar" id="composerUserAvatar" />
               <div class="composer-input-wrap">
-                <textarea id="composerTextarea" class="composer-textarea" placeholder="What's on your travel mind? Share stories, tips, or check-ins..."></textarea>
+                <textarea id="composerTextarea" class="composer-textarea"
+                  placeholder="What's on your travel mind? Share stories, tips, or check-ins..."></textarea>
                 <div class="composer-tags-preview" id="composerTagsPreview"></div>
                 <div class="composer-photo-preview-wrap" id="composerPhotoPreviewWrap" hidden>
                   <img src="" alt="Preview" class="composer-photo-preview" id="composerPhotoPreview" />
-                  <button type="button" class="composer-remove-photo-btn" id="composerRemovePhotoBtn" aria-label="Remove photo"><i class="fa-solid fa-xmark"></i></button>
+                  <button type="button" class="composer-remove-photo-btn" id="composerRemovePhotoBtn"
+                    aria-label="Remove photo"><i class="fa-solid fa-xmark"></i></button>
                 </div>
               </div>
             </div>
@@ -322,10 +325,14 @@
               <h4><i class="fa-solid fa-fire" style="color:var(--accent-rose);"></i> Trending Destinations</h4>
             </div>
             <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.82rem;">
-              <div><strong style="color:var(--accent-cyan);">#JapanSpring2026</strong> <span style="color:var(--text-muted);">&bull; 42 posts</span></div>
-              <div><strong style="color:var(--accent-cyan);">#BoracaySunsets</strong> <span style="color:var(--text-muted);">&bull; 29 posts</span></div>
-              <div><strong style="color:var(--accent-cyan);">#SwissAlpsHike</strong> <span style="color:var(--text-muted);">&bull; 18 posts</span></div>
-              <div><strong style="color:var(--accent-cyan);">#BangkokStreetFood</strong> <span style="color:var(--text-muted);">&bull; 15 posts</span></div>
+              <div><strong style="color:var(--accent-cyan);">#JapanSpring2026</strong> <span
+                  style="color:var(--text-muted);">&bull; 42 posts</span></div>
+              <div><strong style="color:var(--accent-cyan);">#BoracaySunsets</strong> <span
+                  style="color:var(--text-muted);">&bull; 29 posts</span></div>
+              <div><strong style="color:var(--accent-cyan);">#SwissAlpsHike</strong> <span
+                  style="color:var(--text-muted);">&bull; 18 posts</span></div>
+              <div><strong style="color:var(--accent-cyan);">#BangkokStreetFood</strong> <span
+                  style="color:var(--text-muted);">&bull; 15 posts</span></div>
             </div>
           </div>
         </aside>
@@ -353,7 +360,8 @@
 
           <!-- Active Conversations List -->
           <div class="messenger-convos-list" id="messengerConvosList">
-            <div class="messenger-loading-msg"><i class="fa-solid fa-spinner fa-spin"></i> Loading conversations...</div>
+            <div class="messenger-loading-msg"><i class="fa-solid fa-spinner fa-spin"></i> Loading conversations...
+            </div>
           </div>
         </aside>
 
@@ -362,10 +370,12 @@
           <!-- Thread Header -->
           <header class="messenger-thread-header" id="messengerThreadHeader">
             <div class="messenger-peer-info" id="messengerPeerInfo">
-              <span class="avatar-dot" style="--avatar: #06b6d4; width: 42px; height: 42px; font-size: 0.95rem;">💬</span>
+              <span class="avatar-dot"
+                style="--avatar: #06b6d4; width: 42px; height: 42px; font-size: 0.95rem;">💬</span>
               <div>
                 <h4 id="messengerPeerName">Select a conversation</h4>
-                <small id="messengerPeerStatus" style="color: var(--text-muted);">Choose a traveler from the left to start chatting</small>
+                <small id="messengerPeerStatus" style="color: var(--text-muted);">Choose a traveler from the left to
+                  start chatting</small>
               </div>
             </div>
             <div class="messenger-header-actions">
@@ -386,7 +396,8 @@
 
           <!-- Thread Message Input Form -->
           <form class="messenger-input-bar" id="messengerForm">
-            <input type="text" id="messengerInput" placeholder="Type a message..." maxlength="500" autocomplete="off" disabled />
+            <input type="text" id="messengerInput" placeholder="Type a message..." maxlength="500" autocomplete="off"
+              disabled />
             <button type="submit" id="messengerSendBtn" aria-label="Send message" disabled>
               <i class="fa-solid fa-paper-plane"></i>
             </button>
@@ -453,6 +464,12 @@
 
         <!-- Leaflet Map Container -->
         <div class="map-container-wrapper">
+          <!-- Sidebar Expand / Collapse Toggle -->
+          <button class="map-sidebar-toggle" id="mapSidebarToggle" aria-expanded="true" title="Collapse sidebar"
+            aria-label="Expand or collapse sidebar">
+            <i class="fa-solid fa-angles-left"></i>
+          </button>
+
           <!-- Floating Map Layer Switcher -->
           <div class="map-floating-bar">
             <button class="map-layer-btn active" data-layer="dark">Carto Voyager</button>

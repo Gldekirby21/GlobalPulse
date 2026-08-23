@@ -1,0 +1,45 @@
+<!-- COUNTRY DETAIL PAGE (full-page view with back button) -->
+<section class="view-section country-page" id="view-country">
+  <div class="country-page-container">
+    <button class="country-back-btn" id="modalCloseBtn" aria-label="Go back">
+      <i class="fa-solid fa-arrow-left"></i> <span>Back</span>
+    </button>
+
+    <!-- Hero Header -->
+    <div class="country-hero">
+      <img id="modalFlagBg" class="modal-flag-bg" src="" alt="Flag Backdrop" />
+      <div class="modal-hero-content">
+        <img id="modalFlagThumb" class="modal-flag-thumb" src="" alt="Flag Thumbnail" />
+        <div>
+          <h2 class="modal-country-name" id="modalCountryName">Country Name</h2>
+          <p class="modal-official-name" id="modalOfficialName">Official State Name</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="country-body">
+      <!-- Quick Details Grid -->
+      <div class="detail-grid" id="modalDetailsGrid"></div>
+
+      <!-- Border Countries Navigation -->
+      <div class="border-countries-wrap">
+        <div class="detail-label"><i class="fa-solid fa-border-all"></i> Shared Land Border Countries</div>
+        <div class="border-chips-list" id="modalBordersList"></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="modal-actions">
+        <button class="btn-primary" id="modalViewOnMapBtn">
+          <i class="fa-solid fa-map-location-dot"></i> View on Interactive Map
+        </button>
+        <button class="btn-secondary" id="modalSpeakBtn">
+          <i class="fa-solid fa-volume-high"></i> Pronounce & Listen
+        </button>
+        <button class="btn-secondary" id="modalFavBtn">
+          <i class="fa-regular fa-heart"></i> Save to Favorites
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

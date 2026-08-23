@@ -23,6 +23,8 @@ import { profileManager } from './components/profileManager.js';
 import { socialFeed } from './components/socialFeed.js';
 import { pulseStories } from './components/pulseStories.js';
 import { notificationCenter } from './components/notificationCenter.js';
+import { viewLoader } from './services/viewLoader.js';
+import { isAuthenticated, bindAuthTriggers } from './utils/access.js';
 
 class GlobalPulseApp {
   constructor() {
@@ -37,9 +39,8 @@ class GlobalPulseApp {
     // 1. Theme Setup
     this.setupTheme();
 
-    // 2. Tab Navigation Setup
-    this.setupTabs();
-    this.restoreLastTab();
+    // 2. Load Modular Views
+    await viewLoader.init();
 
     // 3. Initialize Interactive Components & Auth
     authModal.init();
@@ -50,7 +51,11 @@ class GlobalPulseApp {
     pulseStories.init();
     notificationCenter.init();
 
-    // 4. Setup Community Location Sharing with Supabase
+    // 4. Tab Navigation Setup & Route Session Restoration
+    this.setupTabs();
+    this.restoreLastTab();
+
+    // 5. Setup Community Location Sharing with Supabase
     this.setupCommunitySharing();
 
     // Open shared explorer profile cards (?explorer=<id>)
@@ -92,6 +97,9 @@ class GlobalPulseApp {
 
     // 5. Setup Nominatim Search Bar in Map Tab
     this.setupNominatimSearch();
+
+    // 6. Setup Map Sidebar Expand / Collapse Toggle
+    this.setupMapSidebarToggle();
 
     // 6. Setup Search & Filters in Countries Tab
     this.setupCountryFilters();
@@ -207,8 +215,33 @@ class GlobalPulseApp {
     });
   }
 
+  restoreLastTab() {
+    const hash = (location.hash || '').replace('#', '');
+    const saved = localStorage.getItem('globalpulse_tab');
+    const tabToRestore = hash || saved || 'explore';
+
+    // If guest attempts to restore feed/chat, default to explore
+    if (!supabaseService.user && (tabToRestore === 'feed' || tabToRestore === 'chat')) {
+      this.switchTab('explore');
+      return;
+    }
+
+    if (tabToRestore && document.getElementById(`view-${tabToRestore}`)) {
+      this.switchTab(tabToRestore);
+    } else {
+      this.switchTab('explore');
+    }
+  }
+
   switchTab(tabId) {
+    // Session Guard for protected member-only tabs (Feed and Messenger)
+    tabId = viewLoader.guard(tabId);
+
     this.activeTab = tabId;
+
+    // Chrome: footer lives ONLY on Explore; Map & Geocode renders edge-to-edge
+    document.body.classList.toggle('footer-hidden', tabId !== 'explore');
+    document.body.classList.toggle('tab-map', tabId === 'map');
 
     // Remember position across reloads (localStorage + URL hash)
     try { localStorage.setItem('globalpulse_tab', tabId); } catch (e) { /* storage blocked */ }
@@ -283,6 +316,11 @@ class GlobalPulseApp {
 
       this.userLocation = geo;
       console.log('📍 User location detected (IP estimate):', geo);
+
+      // Auto-save location coordinates to database for authenticated users
+      if (supabaseService.user) {
+        supabaseService.publishLocation(true);
+      }
 
       this.renderLocationUI(geo);
 
@@ -446,6 +484,11 @@ class GlobalPulseApp {
       this.userLocation = geo;
       console.log('🎯 Precise GPS location:', geo);
 
+      // Auto-save refined GPS coordinates to database
+      if (supabaseService.user) {
+        supabaseService.publishLocation(true);
+      }
+
       this.renderLocationUI(geo);
 
       // Move the pulsing marker to the precise position
@@ -555,6 +598,36 @@ class GlobalPulseApp {
         try { localStorage.setItem('globalpulse_maplayer', btn.dataset.layer); } catch (e) { /* blocked */ }
       });
     });
+  }
+
+  /**
+   * Map Sidebar Expand / Collapse — preference persists across sessions.
+   * Collapsing hides the sidebar so the map solos the full row.
+   */
+  setupMapSidebarToggle() {
+    const layout = document.querySelector('#view-map .map-layout');
+    const toggleBtn = document.getElementById('mapSidebarToggle');
+    if (!layout || !toggleBtn) return;
+
+    const applyState = (collapsed, persist = true) => {
+      layout.classList.toggle('sidebar-collapsed', collapsed);
+      toggleBtn.setAttribute('aria-expanded', String(!collapsed));
+      toggleBtn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+      if (persist) {
+        try { localStorage.setItem('globalpulse_mapsidebar', collapsed ? 'collapsed' : 'open'); } catch (e) { /* blocked */ }
+      }
+      // Leaflet must re-measure after the grid column changes
+      setTimeout(() => mapManager.invalidateSize(), 300);
+    };
+
+    toggleBtn.addEventListener('click', () => {
+      applyState(!layout.classList.contains('sidebar-collapsed'));
+    });
+
+    // Restore last saved preference without re-persisting it
+    let saved = null;
+    try { saved = localStorage.getItem('globalpulse_mapsidebar'); } catch (e) { /* blocked */ }
+    if (saved === 'collapsed') applyState(true, false);
   }
 
   /**
@@ -747,6 +820,28 @@ class GlobalPulseApp {
 
     // Consolidated Auth Change Handler
     const handleAuthChange = (session) => {
+      const feedBtn = document.getElementById('tabBtnFeed');
+      const chatBtn = document.getElementById('tabBtnChat');
+      const notifWrap = document.getElementById('notifWrap');
+
+      if (session) {
+        if (feedBtn) feedBtn.hidden = false;
+        if (chatBtn) chatBtn.hidden = false;
+        if (notifWrap) notifWrap.hidden = false;
+        passport.refresh();
+        supabaseService.publishLocation();
+        supabaseService.startHeartbeat();
+      } else {
+        if (feedBtn) feedBtn.hidden = true;
+        if (chatBtn) chatBtn.hidden = true;
+        if (notifWrap) notifWrap.hidden = true;
+        passport.stampedSet.clear();
+        supabaseService.stopHeartbeat();
+        if (this.activeTab === 'feed' || this.activeTab === 'chat') {
+          this.switchTab('explore');
+        }
+      }
+
       authModal.renderAuthArea(session);
       chatPanel.setSession(session);
       geoQuiz.setSession(session);
@@ -755,14 +850,6 @@ class GlobalPulseApp {
       notificationCenter.loadNotifications();
       this.renderFavoritesGrid();
       countriesView.render();
-      if (session) {
-        passport.refresh();
-        supabaseService.publishLocation();
-        supabaseService.startHeartbeat();
-      } else {
-        passport.stampedSet.clear();
-        supabaseService.stopHeartbeat();
-      }
     };
 
     authModal.onAuthStateChanged = handleAuthChange;
@@ -784,7 +871,7 @@ class GlobalPulseApp {
       this.renderCommunityPanel(users);
       document.dispatchEvent(new CustomEvent('globalpulse:communityfeed', { detail: { users } }));
       mapManager.updateCommunityMarkers(users, supabaseService.user?.id, this.userLocation, {
-        teaser: !isAuthenticated()
+        guest: !isAuthenticated()
       });
     });
   }
@@ -808,13 +895,18 @@ class GlobalPulseApp {
 
     // Guests: curiosity-driving teaser, no personal data
     if (!authed) {
-      listElem.innerHTML = list.length
-        ? `
-          <p class="community-empty">
-            <i class="fa-solid fa-eye"></i> ${list.length} explorer${list.length === 1 ? '' : 's'} online right now.
-            <button type="button" class="link-btn" data-open-auth>Sign in</button> to connect!
-          </p>`
-        : `<p class="community-empty">Sign in to share your pulse and see explorers on the map.</p>`;
+      listElem.innerHTML = `
+        <div style="padding:1rem 0.5rem; text-align:center;">
+          <div style="width:42px; height:42px; border-radius:50%; background:rgba(6, 182, 212, 0.1); border:1.5px solid var(--accent-cyan); display:flex; align-items:center; justify-content:center; color:var(--accent-cyan); margin:0 auto 0.65rem;">
+            <i class="fa-solid fa-users-rays"></i>
+          </div>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.85rem; line-height:1.4;">
+            Sign in to see live explorers around the world and share your pulse on the map.
+          </p>
+          <button type="button" class="btn-primary btn-sm" data-open-auth style="padding:0.4rem 1rem; font-size:0.8rem; font-weight:800; border-radius:var(--radius-full);">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In to Join Map
+          </button>
+        </div>`;
       bindAuthTriggers(listElem);
       return;
     }
@@ -823,25 +915,31 @@ class GlobalPulseApp {
       listElem.innerHTML = `
         <p class="community-empty">
           ${chatPanel.communityTab === 'friends'
-          ? 'No friends online right now — add explorers from the map!'
+          ? 'No friends online right now — connect with explorers on the map!'
           : 'No other explorers online right now. You are the pioneer!'}
         </p>`;
       return;
     }
 
     listElem.innerHTML = list.map(u => {
-      const name = u.profiles?.username || 'Explorer';
-      const color = u.profiles?.avatar_color || '#06b6d4';
-      const initial = name.charAt(0).toUpperCase();
-      const place = [u.city, u.country].filter(Boolean).join(', ') || 'Global';
+      const prof = u.profiles || {};
+      const name = prof.full_name || prof.username || 'Explorer';
+      const color = prof.avatar_color || '#06b6d4';
+      const avatarUrl = prof.avatar_url;
+      const initial = (prof.username || name || '?').charAt(0).toUpperCase();
+      const place = [u.city, u.country].filter(Boolean).join(', ') || 'Global Explorer';
       const isFriend = friendIds.has(u.user_id);
+
+      const avatarHtml = avatarUrl
+        ? `<img src="${avatarUrl}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1.5px solid var(--accent-cyan);" />`
+        : `<span class="avatar-dot" style="--avatar:${color}; width:28px; height:28px; font-size:0.75rem;">${initial}</span>`;
 
       return `
         <div class="community-user-item" data-lat="${u.lat}" data-lon="${u.lon}" data-name="${name}">
-          <span class="avatar-dot" style="--avatar:${color}; width:24px; height:24px; font-size:0.75rem;">${initial}</span>
+          ${avatarHtml}
           <div style="flex:1; overflow:hidden;">
-            <div style="font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name}</div>
-            <div style="font-size:0.72rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${place}</div>
+            <div style="font-weight:700; color:var(--text-primary); font-size:0.84rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name}</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📍 ${place}</div>
           </div>
           <button class="community-action-btn" data-chat-user="${u.user_id}" title="Message ${name}">
             <i class="fa-solid fa-comment-dots"></i>

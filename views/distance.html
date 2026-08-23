@@ -1,0 +1,38 @@
+<!-- TAB 4: DISTANCE & ROUTE CALCULATOR -->
+<section class="view-section" id="view-distance">
+  <div class="distance-wrapper">
+    <div class="distance-input-card">
+      <h2 style="margin-bottom: 0.5rem; font-size: 1.6rem;"><i class="fa-solid fa-plane-departure"
+          style="color: var(--accent-cyan);"></i> Great-Circle Distance Calculator</h2>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Calculates the geodesic flight distance and flight time between any two countries on Earth using the
+        Haversine spherical formula.
+      </p>
+
+      <div class="distance-form-grid">
+        <div>
+          <label
+            style="display:block; font-size: 0.8rem; text-transform:uppercase; color: var(--text-muted); margin-bottom: 0.4rem; font-weight:700;">
+            Origin (From)
+          </label>
+          <select id="distanceFromSelect" class="custom-select" style="width: 100%;"></select>
+        </div>
+
+        <button class="swap-btn" id="btnSwapDistance" title="Swap Origin and Destination">
+          <i class="fa-solid fa-right-left"></i>
+        </button>
+
+        <div>
+          <label
+            style="display:block; font-size: 0.8rem; text-transform:uppercase; color: var(--text-muted); margin-bottom: 0.4rem; font-weight:700;">
+            Destination (To)
+          </label>
+          <select id="distanceToSelect" class="custom-select" style="width: 100%;"></select>
+        </div>
+      </div>
+
+      <!-- Result Banner -->
+      <div class="distance-result-banner" id="distanceResultBanner"></div>
+    </div>
+  </div>
+</section>
