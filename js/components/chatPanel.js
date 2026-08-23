@@ -25,6 +25,7 @@ class ChatPanel {
         this.injectHeaderButton();
         this.ensureDrawer();
         this.injectCommunityTabs();
+        this.bindMessengerPageEvents();
 
         // Delegated actions from community list items & popups
         document.addEventListener('click', (e) => {
@@ -48,6 +49,33 @@ class ChatPanel {
                 }));
             }
         });
+    }
+
+    bindMessengerPageEvents() {
+        const form = document.getElementById('messengerForm');
+        const input = document.getElementById('messengerInput');
+        const search = document.getElementById('messengerSearchInput');
+
+        if (form && input) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const body = input.value.trim();
+                if (body) {
+                    this.send(body);
+                    input.value = '';
+                }
+            });
+        }
+
+        if (search) {
+            search.addEventListener('input', () => {
+                const q = search.value.toLowerCase().trim();
+                document.querySelectorAll('#messengerConvosList .chat-convo-row').forEach((row) => {
+                    const name = row.querySelector('strong')?.textContent.toLowerCase() || '';
+                    row.style.display = name.includes(q) ? 'flex' : 'none';
+                });
+            });
+        }
     }
 
     injectHeaderButton() {
@@ -253,35 +281,40 @@ class ChatPanel {
 
     renderRequests() {
         const box = document.getElementById('chatRequests');
-        if (!box) return;
+        const pageBox = document.getElementById('messengerRequestsWrap');
 
         if (!this.requests.length) {
-            box.innerHTML = '';
-            box.style.display = 'none';
+            if (box) { box.innerHTML = ''; box.style.display = 'none'; }
+            if (pageBox) { pageBox.innerHTML = ''; pageBox.style.display = 'none'; }
             return;
         }
 
-        box.style.display = 'block';
-        box.innerHTML = `
-      <div class="chat-section-title"><i class="fa-solid fa-user-plus"></i> Friend Requests</div>
+        const html = `
+      <div class="chat-section-title" style="padding:0.6rem 0.85rem; font-size:0.78rem; font-weight:800; color:var(--text-muted);"><i class="fa-solid fa-user-plus"></i> Friend Requests</div>
       ${this.requests.map((id) => `
-        <div class="chat-request-row" data-req-id="${id}">
-          <span class="avatar-dot" style="--avatar:#8b5cf6;">?</span>
-          <span class="chat-req-name">Explorer</span>
-          <button class="chat-req-btn accept" data-accept="${id}" title="Accept">
+        <div class="chat-request-row" data-req-id="${id}" style="display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.85rem;">
+          <span class="avatar-dot" style="--avatar:#8b5cf6; width:28px; height:28px; font-size:0.75rem;">?</span>
+          <span class="chat-req-name" style="flex:1; font-size:0.82rem; font-weight:700;">Explorer</span>
+          <button class="chat-req-btn accept" data-accept="${id}" title="Accept" style="background:var(--accent-emerald); color:#fff; border:none; border-radius:4px; padding:0.25rem 0.5rem; cursor:pointer;">
             <i class="fa-solid fa-check"></i>
           </button>
-          <button class="chat-req-btn decline" data-decline="${id}" title="Decline">
+          <button class="chat-req-btn decline" data-decline="${id}" title="Decline" style="background:var(--accent-rose); color:#fff; border:none; border-radius:4px; padding:0.25rem 0.5rem; cursor:pointer;">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>`).join('')}`;
 
-        box.querySelectorAll('[data-accept]').forEach((b) =>
-            b.addEventListener('click', () => this.acceptRequest(b.dataset.accept))
-        );
-        box.querySelectorAll('[data-decline]').forEach((b) =>
-            b.addEventListener('click', () => this.declineRequest(b.dataset.decline))
-        );
+        [box, pageBox].forEach((container) => {
+            if (container) {
+                container.style.display = 'block';
+                container.innerHTML = html;
+                container.querySelectorAll('[data-accept]').forEach((b) =>
+                    b.addEventListener('click', () => this.acceptRequest(b.dataset.accept))
+                );
+                container.querySelectorAll('[data-decline]').forEach((b) =>
+                    b.addEventListener('click', () => this.declineRequest(b.dataset.decline))
+                );
+            }
+        });
     }
 
     /* --------------------------- Conversations -------------------------- */
@@ -315,15 +348,20 @@ class ChatPanel {
 
     async renderConversationList() {
         const box = document.getElementById('chatConversations');
-        if (!box) return;
+        const pageBox = document.getElementById('messengerConvosList');
 
         const convos = await this.loadConversations();
         this.updateBadge();
 
         if (!convos.length) {
-            box.innerHTML = `
-        <p class="community-empty">No conversations yet.<br/>
-        Click a community explorer on the map and hit “💬” to say hi!</p>`;
+            const emptyHtml = `
+        <div class="community-empty" style="padding:2rem 1rem; text-align:center; color:var(--text-muted); font-size:0.84rem;">
+          <i class="fa-solid fa-comments" style="font-size:1.8rem; opacity:0.4; margin-bottom:0.5rem; display:block;"></i>
+          No conversations yet.<br/>
+          Click an explorer in the community or feed to start chatting!
+        </div>`;
+            if (box) box.innerHTML = emptyHtml;
+            if (pageBox) pageBox.innerHTML = emptyHtml;
             return;
         }
 
@@ -335,7 +373,7 @@ class ChatPanel {
             .in('id', ids);
         const profMap = new Map((profs || []).map((p) => [p.id, p]));
 
-        box.innerHTML = convos.map(({ peerId, last }) => {
+        const listHtml = convos.map(({ peerId, last }) => {
             const p = profMap.get(peerId);
             const name = p?.username || 'Explorer';
             const color = p?.avatar_color || '#06b6d4';
@@ -355,15 +393,18 @@ class ChatPanel {
         </button>`;
         }).join('');
 
-        box.querySelectorAll('.chat-convo-row').forEach((row) =>
-            row.addEventListener('click', () => this.openWith(row.dataset.peer))
-        );
+        [box, pageBox].forEach((container) => {
+            if (container) {
+                container.innerHTML = listHtml;
+                container.querySelectorAll('.chat-convo-row').forEach((row) =>
+                    row.addEventListener('click', () => this.openWith(row.dataset.peer))
+                );
+            }
+        });
     }
 
     async openWith(userId) {
         if (!supabaseService.user || !userId || userId === supabaseService.user.id) return;
-        this.ensureDrawer();
-        this.show();
 
         const { data: prof } = await supabaseService.client
             .from('profiles')
@@ -373,7 +414,35 @@ class ChatPanel {
         if (!prof) return;
 
         this.activePeer = prof;
-        this.showThread();
+
+        // If drawer is open, show in drawer
+        if (!this.drawer?.hidden) {
+            this.showThread();
+        }
+
+        // Update Full-Page Messenger Header & Inputs
+        const pName = document.getElementById('messengerPeerName');
+        const pStatus = document.getElementById('messengerPeerStatus');
+        const pInfo = document.getElementById('messengerPeerInfo');
+        const mInput = document.getElementById('messengerInput');
+        const mBtn = document.getElementById('messengerSendBtn');
+        const ws = document.querySelector('.messenger-workspace');
+
+        if (pName) pName.textContent = prof.username || 'Explorer';
+        if (pStatus) pStatus.textContent = 'Active now • Pulse Messenger';
+        if (pInfo) {
+            pInfo.innerHTML = `
+              <span class="avatar-dot" style="--avatar:${prof.avatar_color || '#06b6d4'}; width:40px; height:40px; font-size:0.9rem;">
+                ${(prof.username || '?').charAt(0).toUpperCase()}
+              </span>
+              <div>
+                <h4 id="messengerPeerName">${prof.username || 'Explorer'}</h4>
+                <small id="messengerPeerStatus" style="color:var(--text-muted);">Active now &bull; Pulse Messenger</small>
+              </div>`;
+        }
+        if (mInput) { mInput.disabled = false; mInput.focus(); }
+        if (mBtn) mBtn.disabled = false;
+        if (ws) ws.classList.add('thread-active');
 
         // Load thread
         const me = supabaseService.user.id;
@@ -384,9 +453,15 @@ class ChatPanel {
             .order('created_at', { ascending: true })
             .limit(100);
 
+        const msgsHtml = (msgs || []).map((m) => this._messageHtml(m, me)).join('') ||
+            '<p class="community-empty" style="padding:2rem; text-align:center; color:var(--text-muted);">Say hello 👋</p>';
+
         const box = document.getElementById('chatMessages');
-        box.innerHTML = (msgs || []).map((m) => this._messageHtml(m, me)).join('') ||
-            '<p class="community-empty">Say hello 👋</p>';
+        if (box) box.innerHTML = msgsHtml;
+
+        const pageStream = document.getElementById('messengerMessagesStream');
+        if (pageStream) pageStream.innerHTML = msgsHtml;
+
         this.scrollToBottom(false);
 
         // Mark incoming as read
@@ -402,12 +477,17 @@ class ChatPanel {
 
     scrollToBottom(smooth = true) {
         const box = document.getElementById('chatMessages');
-        if (!box) return;
-        requestAnimationFrame(() => {
-            box.scrollTo({
-                top: box.scrollHeight,
-                behavior: smooth ? 'smooth' : 'auto'
-            });
+        const pageStream = document.getElementById('messengerMessagesStream');
+
+        [box, pageStream].forEach((el) => {
+            if (el) {
+                requestAnimationFrame(() => {
+                    el.scrollTo({
+                        top: el.scrollHeight,
+                        behavior: smooth ? 'smooth' : 'auto'
+                    });
+                });
+            }
         });
     }
 
@@ -450,19 +530,23 @@ class ChatPanel {
         const me = supabaseService.user.id;
         const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
-        // Optimistic UI append
+        // Optimistic UI append to both drawer and page view
         const box = document.getElementById('chatMessages');
-        if (box) {
-            const empty = box.querySelector('.community-empty');
-            if (empty) empty.remove();
+        const pageStream = document.getElementById('messengerMessagesStream');
 
-            box.insertAdjacentHTML('beforeend', this._messageHtml(
-                { sender_id: me, body, created_at: new Date().toISOString() },
-                me,
-                tempId
-            ));
-            this.scrollToBottom(true);
-        }
+        [box, pageStream].forEach((container) => {
+            if (container) {
+                const empty = container.querySelector('.community-empty, .messenger-empty-state');
+                if (empty) empty.remove();
+
+                container.insertAdjacentHTML('beforeend', this._messageHtml(
+                    { sender_id: me, body, created_at: new Date().toISOString() },
+                    me,
+                    tempId
+                ));
+            }
+        });
+        this.scrollToBottom(true);
 
         const { data, error } = await supabaseService.client.from('messages').insert({
             sender_id: me,
@@ -472,14 +556,16 @@ class ChatPanel {
 
         if (error) {
             console.warn('Send failed:', error.message);
-            const tempEl = document.querySelector(`[data-msg-id="${tempId}"]`);
-            if (tempEl) tempEl.style.opacity = '0.4';
+            document.querySelectorAll(`[data-msg-id="${tempId}"]`).forEach((el) => {
+                el.style.opacity = '0.4';
+            });
             return;
         }
 
         if (data && data.id) {
-            const tempEl = document.querySelector(`[data-msg-id="${tempId}"]`);
-            if (tempEl) tempEl.setAttribute('data-msg-id', data.id);
+            document.querySelectorAll(`[data-msg-id="${tempId}"]`).forEach((el) => {
+                el.setAttribute('data-msg-id', data.id);
+            });
         }
 
         // chatty badge at 10 sent messages
@@ -519,31 +605,33 @@ class ChatPanel {
         const peerId = m.sender_id === me ? m.recipient_id : m.sender_id;
 
         // Live-append to open thread
-        if (this.activePeer && this.activePeer.id === peerId && !this.drawer.hidden) {
+        if (this.activePeer && this.activePeer.id === peerId) {
             const box = document.getElementById('chatMessages');
-            if (box) {
-                // If message already rendered by id, SKIP!
-                const existing = box.querySelector(`[data-msg-id="${m.id}"]`);
+            const pageStream = document.getElementById('messengerMessagesStream');
+
+            [box, pageStream].forEach((container) => {
+                if (!container) return;
+                const existing = container.querySelector(`[data-msg-id="${m.id}"]`);
                 if (existing) return;
 
-                // If sent by me, associate with pending optimistic temp bubble
                 if (m.sender_id === me) {
-                    const tempEls = box.querySelectorAll('.chat-msg.mine[data-msg-id^="temp_"]');
+                    const tempEls = container.querySelectorAll('.chat-msg.mine[data-msg-id^="temp_"]');
                     for (const el of tempEls) {
                         const bubble = el.querySelector('.chat-bubble');
                         if (bubble && bubble.textContent === m.body) {
                             el.setAttribute('data-msg-id', m.id);
-                            return; // deduplicated successfully
+                            return;
                         }
                     }
                 }
 
-                const empty = box.querySelector('.community-empty');
+                const empty = container.querySelector('.community-empty, .messenger-empty-state');
                 if (empty) empty.remove();
 
-                box.insertAdjacentHTML('beforeend', this._messageHtml(m, me, m.id));
-                this.scrollToBottom(true);
-            }
+                container.insertAdjacentHTML('beforeend', this._messageHtml(m, me, m.id));
+            });
+
+            this.scrollToBottom(true);
 
             if (m.recipient_id === me) {
                 supabaseService.client.from('messages').update({ read: true }).eq('id', m.id);
@@ -553,7 +641,7 @@ class ChatPanel {
             this.updateBadge();
         }
 
-        if (!this.drawer.hidden && !this.activePeer) this.renderConversationList();
+        this.renderConversationList();
     }
 
     async refreshUnread() {

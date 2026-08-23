@@ -80,6 +80,10 @@
           <i class="fa-solid fa-newspaper"></i>
           <span>Feed</span>
         </button>
+        <button class="nav-tab-btn" data-tab="chat" id="tabBtnChat">
+          <i class="fa-solid fa-comments"></i>
+          <span>Messenger</span>
+        </button>
         <button class="nav-tab-btn" data-tab="map" id="tabBtnMap">
           <i class="fa-solid fa-map-location-dot"></i>
           <span>Map & Geocode</span>
@@ -325,6 +329,69 @@
             </div>
           </div>
         </aside>
+      </div>
+    </section>
+
+    <!-- TAB: FULL-PAGE MESSENGER (DESKTOP / WEB BROWSER STYLE) -->
+    <section class="view-section" id="view-chat">
+      <div class="messenger-workspace">
+        <!-- Left Sidebar: Conversations & Friend Requests -->
+        <aside class="messenger-sidebar">
+          <div class="messenger-sidebar-header">
+            <div class="messenger-sidebar-title-row">
+              <h3><i class="fa-solid fa-comments" style="color: var(--accent-cyan);"></i> Messenger</h3>
+              <span class="messenger-active-badge" id="messengerOnlineStatus">🟢 Live Sync</span>
+            </div>
+            <div class="messenger-search-wrap">
+              <i class="fa-solid fa-search"></i>
+              <input type="text" id="messengerSearchInput" placeholder="Search conversations & explorers..." />
+            </div>
+          </div>
+
+          <!-- Pending Friend Requests -->
+          <div class="messenger-requests-wrap" id="messengerRequestsWrap"></div>
+
+          <!-- Active Conversations List -->
+          <div class="messenger-convos-list" id="messengerConvosList">
+            <div class="messenger-loading-msg"><i class="fa-solid fa-spinner fa-spin"></i> Loading conversations...</div>
+          </div>
+        </aside>
+
+        <!-- Main Chat Thread Window -->
+        <main class="messenger-thread-main" id="messengerThreadMain">
+          <!-- Thread Header -->
+          <header class="messenger-thread-header" id="messengerThreadHeader">
+            <div class="messenger-peer-info" id="messengerPeerInfo">
+              <span class="avatar-dot" style="--avatar: #06b6d4; width: 42px; height: 42px; font-size: 0.95rem;">💬</span>
+              <div>
+                <h4 id="messengerPeerName">Select a conversation</h4>
+                <small id="messengerPeerStatus" style="color: var(--text-muted);">Choose a traveler from the left to start chatting</small>
+              </div>
+            </div>
+            <div class="messenger-header-actions">
+              <button type="button" class="icon-btn" id="messengerProfileBtn" title="View Profile" hidden>
+                <i class="fa-solid fa-user"></i>
+              </button>
+            </div>
+          </header>
+
+          <!-- Thread Messages Stream -->
+          <div class="messenger-messages-stream" id="messengerMessagesStream">
+            <div class="messenger-empty-state">
+              <div class="messenger-empty-icon"><i class="fa-solid fa-paper-plane"></i></div>
+              <h3>Your Travel Messenger</h3>
+              <p>Send instant direct messages, plan meetups, and connect with explorers worldwide.</p>
+            </div>
+          </div>
+
+          <!-- Thread Message Input Form -->
+          <form class="messenger-input-bar" id="messengerForm">
+            <input type="text" id="messengerInput" placeholder="Type a message..." maxlength="500" autocomplete="off" disabled />
+            <button type="submit" id="messengerSendBtn" aria-label="Send message" disabled>
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </form>
+        </main>
       </div>
     </section>
 
