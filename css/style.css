@@ -226,7 +226,8 @@ img {
   width: 100%;
   display: flex;
   align-items: center;
-  transition: background var(--transition-normal), min-height var(--transition-normal), padding var(--transition-normal);
+  padding: 0.45rem 0;
+  transition: background var(--transition-normal), min-height var(--transition-normal);
 }
 
 .nav-content {
@@ -234,15 +235,15 @@ img {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.6rem;
   font-family: 'Outfit', sans-serif;
-  font-size: clamp(1.15rem, 1.6vw, 1.4rem);
+  font-size: 1.3rem;
   font-weight: 800;
   text-decoration: none;
   cursor: pointer;
@@ -250,15 +251,15 @@ img {
 }
 
 .brand-icon {
-  width: clamp(34px, 4vw, 42px);
-  height: clamp(34px, 4vw, 42px);
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-sm);
   background: var(--grad-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  font-size: clamp(1.05rem, 1.4vw, 1.3rem);
+  font-size: 1.15rem;
   box-shadow: 0 4px 14px var(--accent-cyan-glow);
   position: relative;
   overflow: hidden;
@@ -312,20 +313,20 @@ img {
 .nav-tabs {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.25rem;
   background: var(--bg-surface);
-  padding: 0.3rem 0.4rem;
+  padding: 0.25rem 0.35rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-glass);
-  max-width: 100%;
+  flex-shrink: 1;
 }
 
 .nav-tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 0.95rem;
-  font-size: clamp(0.78rem, 0.92vw, 0.88rem);
+  gap: 0.38rem;
+  padding: 0.42rem 0.75rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-secondary);
   border-radius: var(--radius-full);
@@ -336,7 +337,7 @@ img {
 }
 
 .nav-tab-btn i {
-  font-size: 0.92rem;
+  font-size: 0.88rem;
 }
 
 .nav-tab-btn:hover {
@@ -354,24 +355,24 @@ img {
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   flex-shrink: 0;
 }
 
 .user-geo-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.42rem 0.8rem;
+  gap: 0.45rem;
+  padding: 0.38rem 0.75rem;
   background: var(--bg-surface);
   border: 1px solid var(--border-glass-strong);
   border-radius: var(--radius-full);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--text-primary);
   cursor: pointer;
   transition: all var(--transition-fast);
-  max-width: 190px;
+  max-width: 140px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -411,8 +412,8 @@ img {
 }
 
 .icon-btn {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--bg-surface);
   border: 1px solid var(--border-glass);
@@ -420,7 +421,7 @@ img {
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  font-size: 1rem;
+  font-size: 0.95rem;
   transition: all var(--transition-fast);
   flex-shrink: 0;
   cursor: pointer;
@@ -1692,41 +1693,45 @@ img {
    Responsive Breakpoints & Zoom Scalability (10% to 500% & All Screen Sizes)
    ========================================================================== */
 
-/* Laptop / Zoom 110% - 125% (1025px to 1250px) */
-@media (max-width: 1250px) {
+/* Laptop / Zoom 110% - 125% (1141px to 1280px) */
+@media (max-width: 1280px) {
   .nav-content {
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
   .nav-tabs {
-    gap: 0.2rem;
-    padding: 0.25rem 0.35rem;
+    gap: 0.15rem;
+    padding: 0.2rem 0.3rem;
   }
 
   .nav-tab-btn {
-    padding: 0.42rem 0.72rem;
-    font-size: 0.8rem;
-    gap: 0.35rem;
+    padding: 0.38rem 0.65rem;
+    font-size: 0.78rem;
+    gap: 0.3rem;
   }
 
   .user-geo-chip {
-    max-width: 140px;
-    padding: 0.38rem 0.65rem;
-    font-size: 0.76rem;
+    max-width: 130px;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.74rem;
   }
 }
 
-/* Tablet & Compact Desktop / Zoom 125% - 150% (769px to 1024px) */
-@media (max-width: 1024px) {
+/* Tablet & Compact Desktop / Zoom 125% - 150% (769px to 1140px) */
+@media (max-width: 1140px) {
   .site-header {
-    padding: 0.5rem 0;
+    padding: 0.45rem 0;
     min-height: auto;
   }
 
   .nav-content {
     flex-wrap: wrap;
-    row-gap: 0.65rem;
+    row-gap: 0.5rem;
     column-gap: 0.75rem;
+  }
+
+  .nav-actions {
+    margin-left: auto;
   }
 
   .nav-tabs {
@@ -1738,7 +1743,8 @@ img {
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     justify-content: flex-start;
-    padding: 0.32rem 0.5rem;
+    padding: 0.3rem 0.4rem;
+    background: var(--bg-surface-elevated);
     border-radius: var(--radius-full);
   }
 
@@ -1747,8 +1753,8 @@ img {
   }
 
   .nav-tab-btn {
-    padding: 0.45rem 0.85rem;
-    font-size: 0.82rem;
+    padding: 0.42rem 0.78rem;
+    font-size: 0.8rem;
   }
 
   .hero-grid {
