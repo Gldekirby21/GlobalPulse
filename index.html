@@ -104,6 +104,10 @@
           <span class="pulse-dot"></span>
           <span>Detecting IP...</span>
         </button>
+        <button class="icon-btn" id="signInBtn" title="Sign In to Community" aria-label="Sign In">
+          <i class="fa-solid fa-right-to-bracket"></i>
+        </button>
+        <div class="account-chip-wrap" id="accountChipWrap" hidden></div>
         <button class="icon-btn" id="themeToggleBtn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
           <i class="fa-solid fa-sun"></i>
         </button>
@@ -238,6 +242,24 @@
               Click anywhere on the interactive map to discover the exact address, municipality, postal code, and
               country coordinates!
             </p>
+          </div>
+
+          <!-- Community Pulse (Live Explorer Locations) -->
+          <div class="community-panel" id="communityPanel">
+            <div class="community-panel-header">
+              <i class="fa-solid fa-users-rays"></i>
+              <div>
+                <h3>Community Pulse</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);"><span id="communityCount">0</span> explorers live
+                  now</p>
+              </div>
+              <button class="community-toggle-btn active" id="communityToggleBtn" title="Show/hide community markers">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+            <div class="community-list" id="communityList">
+              <p class="community-empty" id="communityEmpty">Sign in to see and share live explorer locations.</p>
+            </div>
           </div>
 
           <div style="margin-top:auto; font-size:0.75rem; color:var(--text-muted); line-height:1.4;">
@@ -489,6 +511,44 @@
   <!-- Leaflet JS Library -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Supabase JS (Community Auth & Live Locations) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Auth Modal (Community Login) -->
+  <div class="auth-modal-overlay" id="authModal" hidden>
+    <div class="auth-modal-card">
+      <button class="auth-modal-close" id="authModalClose" aria-label="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="auth-modal-header">
+        <div class="auth-modal-logo"><i class="fa-solid fa-earth-asia"></i></div>
+        <h3>Join the GlobalPulse Community</h3>
+        <p>Sign in to share your pulse and see other explorers on the map.</p>
+      </div>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="authTabSignIn">Sign In</button>
+        <button type="button" class="auth-tab" id="authTabSignUp">Sign Up</button>
+      </div>
+      <div class="auth-error" id="authError" style="display:none;"></div>
+      <form id="signInForm">
+        <input class="auth-input" type="email" id="signInEmail" placeholder="Email address" required />
+        <input class="auth-input" type="password" id="signInPassword" placeholder="Password" required />
+        <button class="auth-submit-btn" type="submit"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>
+      </form>
+      <form id="signUpForm" hidden>
+        <input class="auth-input" type="text" id="signUpUsername" placeholder="Display name" maxlength="24" required />
+        <input class="auth-input" type="email" id="signUpEmail" placeholder="Email address" required />
+        <input class="auth-input" type="password" id="signUpPassword" placeholder="Password (min 6 chars)" required />
+        <input class="auth-input" type="password" id="signUpPassword2" placeholder="Confirm password" required />
+        <button class="auth-submit-btn" type="submit"><i class="fa-solid fa-user-plus"></i> Create Account</button>
+      </form>
+      <div class="auth-divider"><span>or</span></div>
+      <button class="google-btn" id="googleSignInBtn">
+        <i class="fa-brands fa-google"></i> Continue with Google
+      </button>
+    </div>
+  </div>
 
   <!-- Main Application Entry Point -->
   <script type="module" src="js/app.js"></script>

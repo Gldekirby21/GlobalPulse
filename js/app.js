@@ -6,12 +6,14 @@
 import { ipService } from './services/ipService.js';
 import { countriesService } from './services/countriesService.js';
 import { nominatimService } from './services/nominatimService.js';
+import { supabaseService } from './services/supabaseService.js';
 import { mapManager } from './components/mapManager.js';
 import { countriesView } from './components/countriesView.js';
 import { compareView } from './components/compareView.js';
 import { distanceCalc } from './components/distanceCalc.js';
 import { aiGuide } from './components/aiGuide.js';
 import { favoritesManager } from './components/favorites.js';
+import { authModal } from './components/authModal.js';
 
 class GlobalPulseApp {
   constructor() {
@@ -28,10 +30,14 @@ class GlobalPulseApp {
     // 2. Tab Navigation Setup
     this.setupTabs();
 
-    // 3. Initialize Interactive Components
+    // 3. Initialize Interactive Components & Auth
+    authModal.init();
     countriesView.init();
     aiGuide.init();
     distanceCalc.init();
+
+    // 4. Setup Community Location Sharing with Supabase
+    this.setupCommunitySharing();
 
     // 4. Setup Map & Locate Callbacks
     countriesView.setOnLocate((lat, lon, name) => {
@@ -581,6 +587,107 @@ class GlobalPulseApp {
         this.renderFavoritesGrid();
         countriesView.render();
         this.showToast('Removed from saved list', 'info');
+      });
+    });
+  }
+
+  /**
+   * Supabase Community Location Sharing
+   */
+  setupCommunitySharing() {
+    // Provide current coordinates provider
+    supabaseService.setCoordsProvider(() => this.userLocation);
+
+    // Toggle button on Map Sidebar
+    const toggleBtn = document.getElementById('communityToggleBtn');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const active = toggleBtn.classList.toggle('active');
+        toggleBtn.innerHTML = `<i class="fa-solid fa-${active ? 'eye' : 'eye-slash'}"></i>`;
+        mapManager.toggleCommunityMarkers(active);
+      });
+    }
+
+    // Auth callbacks
+    authModal.onAuthStateChanged = (session) => {
+      authModal.renderAuthArea(session);
+      if (session) {
+        supabaseService.publishLocation();
+        supabaseService.startHeartbeat();
+      } else {
+        supabaseService.stopHeartbeat();
+      }
+    };
+
+    authModal.onSharingChanged = () => {
+      // Re-trigger location updates
+      if (supabaseService.user && supabaseService.sharingEnabled) {
+        supabaseService.publishLocation();
+      }
+    };
+
+    // Initialize Supabase session
+    supabaseService.init((session) => {
+      authModal.renderAuthArea(session);
+      if (session) {
+        supabaseService.publishLocation();
+        supabaseService.startHeartbeat();
+      }
+    });
+
+    // Realtime Community Location Stream
+    supabaseService.subscribeToLocations((users) => {
+      this.renderCommunityPanel(users);
+      mapManager.updateCommunityMarkers(users, supabaseService.user?.id, this.userLocation);
+    });
+  }
+
+  renderCommunityPanel(users) {
+    const countElem = document.getElementById('communityCount');
+    const listElem = document.getElementById('communityList');
+    const emptyElem = document.getElementById('communityEmpty');
+
+    if (!listElem) return;
+
+    const list = (users || []).filter(u => u.user_id !== supabaseService.user?.id);
+    if (countElem) countElem.textContent = String(users?.length || 0);
+
+    if (list.length === 0) {
+      listElem.innerHTML = `
+        <p class="community-empty">
+          ${supabaseService.user ? 'No other explorers online right now. You are the pioneer!' : 'Sign in to share your pulse and see explorers on the map.'}
+        </p>
+      `;
+      return;
+    }
+
+    listElem.innerHTML = list.map(u => {
+      const name = u.profiles?.username || 'Explorer';
+      const color = u.profiles?.avatar_color || '#06b6d4';
+      const initial = name.charAt(0).toUpperCase();
+      const place = [u.city, u.country].filter(Boolean).join(', ') || 'Global';
+
+      return `
+        <div class="community-user-item" data-lat="${u.lat}" data-lon="${u.lon}" data-name="${name}">
+          <span class="avatar-dot" style="--avatar:${color}; width:24px; height:24px; font-size:0.75rem;">${initial}</span>
+          <div style="flex:1; overflow:hidden;">
+            <div style="font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name}</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${place}</div>
+          </div>
+          <i class="fa-solid fa-location-arrow" style="font-size:0.75rem; color:var(--accent-cyan);"></i>
+        </div>
+      `;
+    }).join('');
+
+    listElem.querySelectorAll('.community-user-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const lat = parseFloat(item.dataset.lat);
+        const lon = parseFloat(item.dataset.lon);
+        const name = item.dataset.name;
+        if (Number.isFinite(lat) && Number.isFinite(lon)) {
+          this.switchTab('map');
+          mapManager._flyToSafe([lat, lon], 7, 1.5);
+        }
       });
     });
   }

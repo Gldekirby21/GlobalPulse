@@ -18,6 +18,11 @@ class MapManager {
     this.tileLayers = {};
     this.onCountrySelectCallback = null;
     this.onReverseGeocodeCallback = null;
+
+    // Community layer
+    this.communityMarkers = L.layerGroup();
+    this.communityVisible = true;
+    this.communityUsers = [];
   }
 
   /**
@@ -344,6 +349,98 @@ class MapManager {
       points.push([(lat * 180) / Math.PI, (lon * 180) / Math.PI]);
     }
     return points;
+  }
+
+  /**
+   * Render live community explorer markers.
+   * @param {Array} users - rows from supabaseService.fetchSharedLocations()
+   * @param {string|null} myUserId - current user id (excluded from layer)
+   * @param {{lat:number, lon:number}|null} myCoords - for distance labels
+   */
+  updateCommunityMarkers(users, myUserId = null, myCoords = null) {
+    this.communityUsers = users || [];
+
+    if (!this.map) return;
+
+    this.communityMarkers.clearLayers();
+
+    this.communityUsers.forEach((u) => {
+      if (!Number.isFinite(u.lat) || !Number.isFinite(u.lon)) return;
+      if (myUserId && u.user_id === myUserId) return; // own pulse marker already exists
+
+      const name = u.profiles?.username || 'Explorer';
+      const color = u.profiles?.avatar_color || '#06b6d4';
+      const initial = name.charAt(0).toUpperCase();
+      const minsAgo = Math.max(0, Math.round((Date.now() - new Date(u.last_seen)) / 60000));
+      const place = [u.city, u.country].filter(Boolean).join(', ') || 'Somewhere on Earth';
+
+      let distanceHtml = '';
+      if (myCoords && Number.isFinite(myCoords.lat)) {
+        const km = this._haversineKm(myCoords.lat, myCoords.lon, u.lat, u.lon);
+        const label = km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
+        distanceHtml = `
+          <div class="map-popup-distance">
+            <i class="fa-solid fa-ruler"></i> ${label} away from you
+          </div>`;
+      }
+
+      const icon = L.divIcon({
+        className: 'custom-leaflet-div',
+        html: `
+          <div class="community-marker" style="--avatar:${color}" title="${name}">
+            <span class="community-ping"></span>
+            <span class="community-avatar">${initial}</span>
+          </div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+
+      const marker = L.marker([u.lat, u.lon], { icon })
+        .bindPopup(`
+          <div class="map-popup-card">
+            <span class="map-popup-badge"><i class="fa-solid fa-users-rays"></i> Community Explorer</span>
+            <div class="map-popup-title">${name}</div>
+            <div class="map-popup-address">${place}</div>
+            ${distanceHtml}
+            <div style="font-size:0.72rem; color:#64748b;">
+              <i class="fa-solid fa-clock"></i> seen ${minsAgo === 0 ? 'just now' : `${minsAgo} min ago`}
+              ${u.precision_mode === 'city' ? ' &bull; city-level precision' : ''}
+            </div>
+          </div>
+        `);
+
+      marker.on('click', () => this._flyToSafe([u.lat, u.lon], Math.max(this.map.getZoom(), 6), 1.2));
+      this.communityMarkers.addLayer(marker);
+    });
+
+    if (this.communityVisible) {
+      this.communityMarkers.addTo(this.map);
+    }
+  }
+
+  /** Show/hide the community layer without refetching. */
+  toggleCommunityMarkers(visible) {
+    this.communityVisible = visible;
+    if (!this.map) return;
+
+    if (visible) {
+      this.communityMarkers.addTo(this.map);
+    } else {
+      this.map.removeLayer(this.communityMarkers);
+    }
+  }
+
+  _haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
   }
 
   invalidateSize() {
