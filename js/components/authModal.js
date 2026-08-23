@@ -118,7 +118,13 @@ class AuthModal {
         this.setLoading(true);
         try {
             await supabaseService.signIn(email, password);
-            this.close(); // onAuthStateChange drives the rest
+            this.close();
+            // Automatically navigate to the main dashboard / landing page
+            window.globalPulseApp?.switchTab('explore');
+            const name = supabaseService.profile?.username || 'Explorer';
+            if (window.globalPulseApp?.showToast) {
+                window.globalPulseApp.showToast(`Welcome back, ${name}! Your pulse is live. 🌍`, 'success');
+            }
         } catch (err) {
             this.showError(this.friendlyError(err));
         } finally {
@@ -140,7 +146,11 @@ class AuthModal {
         try {
             const { session, user } = await supabaseService.signUp(email, password, username);
             if (session) {
-                this.close(); // auto-signed-in (email confirmation disabled)
+                this.close(); // auto-signed-in
+                window.globalPulseApp?.switchTab('explore');
+                if (window.globalPulseApp?.showToast) {
+                    window.globalPulseApp.showToast(`Account created! Welcome to GlobalPulse, ${username}! 🚀`, 'success');
+                }
             } else if (user && user.identities && user.identities.length === 0) {
                 // Supabase security feature: returns empty identities array if email already exists
                 this.switchTab('signin');
