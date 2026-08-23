@@ -202,6 +202,8 @@ class AuthModal {
 
         const { profile } = session;
         const name = profile?.username || 'Explorer';
+        const color = profile?.avatar_color || '#06b6d4';
+        const initial = name.charAt(0).toUpperCase();
         const email = session.user?.email || '';
 
         // Hide Sign In button completely when user is logged in
@@ -283,8 +285,18 @@ class AuthModal {
 
         if (action === 'signout') {
             supabaseService.signOut()
-                .then(() => this.onSharingChanged?.())
-                .catch((err) => console.warn('Sign out failed:', err.message));
+                .then(() => {
+                    this.renderAuthArea(null);
+                    this.onAuthStateChanged?.(null);
+                    this.onSharingChanged?.();
+                    if (window.globalPulseApp?.showToast) {
+                        window.globalPulseApp.showToast('Logged out of your session successfully 👋', 'info');
+                    }
+                })
+                .catch((err) => {
+                    console.warn('Sign out failed:', err.message);
+                    this.renderAuthArea(null);
+                });
             return;
         }
     }

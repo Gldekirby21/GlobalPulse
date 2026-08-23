@@ -135,11 +135,26 @@ class SupabaseService {
     }
 
     async signOut() {
-        await this.stopSharing(); // remove public location row first
+        try {
+            await this.stopSharing(); // remove public location row first
+        } catch (e) {
+            console.warn('Failed to remove location on signOut:', e);
+        }
         this.stopHeartbeat();
         this.unsubscribeLocations();
-        const { error } = await this.client.auth.signOut();
-        if (error) throw error;
+        this.user = null;
+        this.profile = null;
+        if (this.client) {
+            try {
+                const { error } = await this.client.auth.signOut();
+                if (error) console.warn('Supabase signOut error:', error.message);
+            } catch (e) {
+                console.warn('Auth signOut error:', e);
+            }
+        }
+        if (this._onAuthChange) {
+            this._onAuthChange(null);
+        }
     }
 
     /**

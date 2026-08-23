@@ -22,6 +22,7 @@ class GlobalPulseApp {
   }
 
   async init() {
+    window.globalPulseApp = this;
     console.log('🌍 Initializing GlobalPulse Web System...');
 
     // 1. Theme Setup
@@ -210,7 +211,6 @@ class GlobalPulseApp {
       this.detectUserLocation();
     } catch (err) {
       console.error('Error during initial load:', err);
-      this.showToast('Could not load country data. Please check network connection.', 'error');
     }
   }
 
@@ -233,8 +233,6 @@ class GlobalPulseApp {
       // Initialize Leaflet Map centered around user location
       mapManager.init('leafletMap', geo.lat, geo.lon);
       mapManager.setUserLocation(geo.lat, geo.lon, `Your Location: ${geo.city}, ${geo.country}`);
-
-      this.showToast(`Welcome! Located in ${geo.city || geo.country} 🌍`, 'success');
 
       // IP geolocation only resolves to the ISP's registered area (often a
       // regional center), so refine with precise device GPS in the background
@@ -370,21 +368,12 @@ class GlobalPulseApp {
       if (mapManager.map) {
         mapManager.setUserLocation(geo.lat, geo.lon, `Your Location: ${geo.city}, ${geo.country}`);
       }
-
-      this.showToast(
-        drifted ? `📍 Precise GPS locked: ${geo.city || geo.country}` : '📍 Location refined via GPS',
-        'success'
-      );
     } catch (err) {
       const reason =
         err && err.code === 1 ? 'permission denied' :
           err && err.code === 3 ? 'timed out' :
             (err && err.message) || 'unavailable';
       console.info('Precise GPS not used — staying with IP-based location:', reason);
-
-      if (manual) {
-        this.showToast(`GPS ${reason}. Using IP-based location instead.`, 'error');
-      }
     }
   }
 
@@ -586,7 +575,6 @@ class GlobalPulseApp {
         favoritesManager.removeFavorite(cca3);
         this.renderFavoritesGrid();
         countriesView.render();
-        this.showToast('Removed from saved list', 'info');
       });
     });
   }
@@ -692,27 +680,6 @@ class GlobalPulseApp {
     });
   }
 
-  showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-
-    let iconClass = 'fa-solid fa-info-circle';
-    if (type === 'success') iconClass = 'fa-solid fa-circle-check';
-    if (type === 'error') iconClass = 'fa-solid fa-triangle-exclamation';
-
-    toast.innerHTML = `<i class="${iconClass}"></i> <span>${message}</span>`;
-    container.appendChild(toast);
-
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(100%)';
-      toast.style.transition = 'all 0.3s ease';
-      setTimeout(() => toast.remove(), 300);
-    }, 4000);
-  }
 }
 
 // Bootstrap on DOM Ready
