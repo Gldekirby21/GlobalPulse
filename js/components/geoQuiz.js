@@ -118,47 +118,39 @@ class GeoQuiz {
         const authed = isAuthenticated();
         const prof = supabaseService.profile || {};
 
-        let authStatusHtml = '';
+        let avatarHtml = '';
         if (authed) {
-            const avatarHtml = prof.avatar_url
+            avatarHtml = prof.avatar_url
                 ? `<img src="${prof.avatar_url}" alt="${prof.username || 'Explorer'}" class="quiz-player-avatar" />`
                 : `<span class="avatar-dot quiz-player-avatar" style="--avatar:${prof.avatar_color || '#06b6d4'};">
                     ${(prof.username || '?').charAt(0).toUpperCase()}
                    </span>`;
-
-            authStatusHtml = `
-              <div class="quiz-player-card">
-                <div class="quiz-player-avatar-wrap">
-                  ${avatarHtml}
-                </div>
-                <div class="quiz-player-meta">
-                  <div class="quiz-player-greeting">
-                    Playing as <strong class="quiz-player-name">${prof.full_name || prof.username || 'Explorer'}</strong>
-                  </div>
-                  <div class="quiz-player-status-chips">
-                    <span class="quiz-status-chip xp-chip" title="Total XP Earned">
-                      <i class="fa-solid fa-bolt"></i> <strong>${prof.xp || 0} XP</strong>
-                    </span>
-                    <span class="quiz-status-chip sync-chip" title="Live Global Leaderboard Tracking Active">
-                      <i class="fa-solid fa-circle-check"></i> Leaderboard Active
-                    </span>
-                  </div>
-                </div>
-              </div>`;
-        } else {
-            authStatusHtml = `
-              <div class="quiz-guest-note">
-                <i class="fa-solid fa-circle-info"></i>
-                <span>You're playing as a guest &mdash; <button type="button" class="link-btn" data-open-auth>Sign in</button> to save scores & climb the leaderboard!</span>
-              </div>`;
         }
 
         this.container.innerHTML = `
       <div class="quiz-start">
-        <div class="quiz-hero-icon"><i class="fa-solid fa-brain"></i></div>
-        <h2 class="quiz-title">Geo Quiz Arena</h2>
-        <p class="quiz-subtitle">${QUESTIONS_PER_ROUND} questions &bull; ${SECONDS_PER_QUESTION}s each &bull; capitals, flags & countries</p>
-        ${authStatusHtml}
+        ${authed ? `
+          <div class="quiz-player-avatar-wrap">
+            ${avatarHtml}
+          </div>
+          <h2 class="quiz-title">Geo Quiz Arena</h2>
+          <div class="quiz-player-inline-info">
+            <span>Playing as <strong class="quiz-player-name">${prof.full_name || prof.username || 'Explorer'}</strong></span>
+            <span class="dot-sep">&bull;</span>
+            <span class="quiz-inline-xp"><i class="fa-solid fa-bolt"></i> ${prof.xp || 0} XP</span>
+            <span class="dot-sep">&bull;</span>
+            <span class="quiz-inline-sync"><i class="fa-solid fa-circle-check"></i> Leaderboard Active</span>
+          </div>
+          <p class="quiz-subtitle">${QUESTIONS_PER_ROUND} questions &bull; ${SECONDS_PER_QUESTION}s each &bull; capitals, flags & countries</p>
+        ` : `
+          <div class="quiz-hero-icon"><i class="fa-solid fa-brain"></i></div>
+          <h2 class="quiz-title">Geo Quiz Arena</h2>
+          <p class="quiz-subtitle">${QUESTIONS_PER_ROUND} questions &bull; ${SECONDS_PER_QUESTION}s each &bull; capitals, flags & countries</p>
+          <div class="quiz-guest-note">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>You're playing as a guest &mdash; <button type="button" class="link-btn" data-open-auth>Sign in</button> to save scores & climb the leaderboard!</span>
+          </div>
+        `}
         <button class="quiz-start-btn" id="quizStartBtn">
           <i class="fa-solid fa-play"></i> Start Round
         </button>
