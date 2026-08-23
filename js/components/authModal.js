@@ -138,15 +138,31 @@ class AuthModal {
 
         this.setLoading(true);
         try {
-            const { session } = await supabaseService.signUp(email, password, username);
+            const { session, user } = await supabaseService.signUp(email, password, username);
             if (session) {
                 this.close(); // auto-signed-in (email confirmation disabled)
+            } else if (user && user.identities && user.identities.length === 0) {
+                // Supabase security feature: returns empty identities array if email already exists
+                this.switchTab('signin');
+                const inEmail = document.getElementById('signInEmail');
+                if (inEmail) inEmail.value = email;
+                this.showError('🛑 Bawal ang double account: May existing account na ang email na ito. Pakisubukang mag-Sign In gamit ang iyong password o i-click ang "Continue with Google".');
             } else {
                 this.showError('Account created! Check your email to confirm, then sign in.');
                 this.switchTab('signin');
             }
         } catch (err) {
-            this.showError(this.friendlyError(err));
+            const errText = err?.message || '';
+            if (errText === 'USERNAME_TAKEN') {
+                this.showError('⚠️ Ang display name na ito ay gamit na ng ibang explorer. Pumili ng ibang pangalan.');
+            } else if (/already registered|already exists|duplicate|unique/i.test(errText)) {
+                this.switchTab('signin');
+                const inEmail = document.getElementById('signInEmail');
+                if (inEmail) inEmail.value = email;
+                this.showError('🛑 Bawal ang double account: May existing account na ang email na ito. Pakisubukang mag-Sign In gamit ang iyong password o i-click ang "Continue with Google".');
+            } else {
+                this.showError(this.friendlyError(err));
+            }
         } finally {
             this.setLoading(false);
         }
@@ -160,8 +176,8 @@ class AuthModal {
         if (/email not confirmed/i.test(msg)) {
             return '✉️ Hindi pa nakukumpirma ang iyong email. Pakitingnan ang iyong inbox o i-disable ang "Confirm email" sa Supabase Dashboard.';
         }
-        if (/invalid login|invalid credentials/i.test(msg)) return 'Invalid email or password.';
-        if (/already registered/i.test(msg)) return 'That email already has an account — try signing in.';
+        if (/invalid login|invalid credentials/i.test(msg)) return 'Invalid email or password. Kung nag-sign up ka gamit ang Google, gamitin ang "Continue with Google" button.';
+        if (/already registered|already exists/i.test(msg)) return '🛑 Bawal ang double account: May account na ang email na ito — subukang mag-sign in.';
         if (/at least 6/i.test(msg)) return 'Password must be at least 6 characters.';
         return msg;
     }

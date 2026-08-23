@@ -83,11 +83,36 @@ class SupabaseService {
         }
     }
 
+    async checkUsernameAvailable(username) {
+        if (!this.configured || !username) return true;
+        const clean = username.trim();
+        const { data, error } = await this.client
+            .from('profiles')
+            .select('id')
+            .ilike('username', clean)
+            .maybeSingle();
+
+        if (error) {
+            console.warn('Username check error:', error.message);
+            return true;
+        }
+        return !data; // true if available, false if taken
+    }
+
     async signUp(email, password, username) {
+        const cleanEmail = email.toLowerCase().trim();
+        const cleanUsername = username.trim();
+
+        // 1. Double account security check on username
+        const available = await this.checkUsernameAvailable(cleanUsername);
+        if (!available) {
+            throw new Error('USERNAME_TAKEN');
+        }
+
         const { data, error } = await this.client.auth.signUp({
-            email,
+            email: cleanEmail,
             password,
-            options: { data: { username: username.trim() } }
+            options: { data: { username: cleanUsername } }
         });
         if (error) throw error;
         // Profile row is created on first session via ensureProfile()
@@ -95,7 +120,8 @@ class SupabaseService {
     }
 
     async signIn(email, password) {
-        const { data, error } = await this.client.auth.signInWithPassword({ email, password });
+        const cleanEmail = email.toLowerCase().trim();
+        const { data, error } = await this.client.auth.signInWithPassword({ email: cleanEmail, password });
         if (error) throw error;
         return data;
     }
