@@ -348,20 +348,17 @@ class AuthModal {
         }
 
         if (action === 'signout') {
+            try {
+                localStorage.removeItem('globalpulse_tab');
+            } catch (e) {}
+
             supabaseService.signOut()
-                .then(() => {
+                .finally(() => {
                     this.renderAuthArea(null);
                     this.onAuthStateChanged?.(null);
                     this.onSharingChanged?.();
-                    window.globalPulseApp?.switchTab('explore');
-                    if (window.globalPulseApp?.showToast) {
-                        window.globalPulseApp.showToast('You have been signed out. See you next journey! 👋', 'info');
-                    }
-                })
-                .catch((err) => {
-                    console.warn('Sign out failed:', err.message);
-                    this.renderAuthArea(null);
-                    window.globalPulseApp?.switchTab('explore');
+                    window.location.href = window.location.origin + window.location.pathname + '#explore';
+                    window.location.reload();
                 });
             return;
         }
