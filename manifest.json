@@ -1,0 +1,19 @@
+{
+    "name": "GlobalPulse — Interactive Country & Location Explorer",
+    "short_name": "GlobalPulse",
+    "description": "Explore 250+ countries, geocode any address, measure flight distances, take geo quizzes and meet fellow explorers in real time.",
+    "start_url": ".",
+    "scope": ".",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#0a0f1d",
+    "theme_color": "#0a0f1d",
+    "icons": [
+        {
+            "src": "icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}

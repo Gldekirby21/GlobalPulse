@@ -357,10 +357,13 @@ class MapManager {
    * @param {string|null} myUserId - current user id (excluded from layer)
    * @param {{lat:number, lon:number}|null} myCoords - for distance labels
    */
-  updateCommunityMarkers(users, myUserId = null, myCoords = null) {
+  updateCommunityMarkers(users, myUserId = null, myCoords = null, options = {}) {
     this.communityUsers = users || [];
 
     if (!this.map) return;
+
+    // Teaser mode (guests): blurred markers, no personal details
+    const teaser = !!options.teaser;
 
     this.communityMarkers.clearLayers();
 
@@ -387,7 +390,7 @@ class MapManager {
       const icon = L.divIcon({
         className: 'custom-leaflet-div',
         html: `
-          <div class="community-marker" style="--avatar:${color}" title="${name}">
+          <div class="community-marker ${teaser ? 'teaser' : ''}" style="--avatar:${color}" title="${teaser ? 'Community Explorer' : name}">
             <span class="community-ping"></span>
             <span class="community-avatar">${initial}</span>
           </div>
@@ -396,7 +399,13 @@ class MapManager {
         iconAnchor: [14, 14]
       });
 
-      const marker = L.marker([u.lat, u.lon], { icon })
+      const marker = L.marker([u.lat, u.lon], { icon });
+      if (teaser) {
+        marker.bindTooltip('Sign in to connect', { direction: 'top' });
+        this.communityMarkers.addLayer(marker);
+        return;
+      }
+      marker
         .bindPopup(`
           <div class="map-popup-card">
             <span class="map-popup-badge"><i class="fa-solid fa-users-rays"></i> Community Explorer</span>

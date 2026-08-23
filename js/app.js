@@ -18,6 +18,8 @@ import { geoQuiz } from './components/geoQuiz.js';
 import { passport } from './components/passport.js';
 import { chatPanel } from './components/chatPanel.js';
 import { isAuthenticated, bindAuthTriggers } from './utils/access.js';
+import { weatherService } from './services/weatherService.js';
+import { currencyConverter } from './components/currencyConverter.js';
 
 class GlobalPulseApp {
   constructor() {
@@ -214,6 +216,7 @@ class GlobalPulseApp {
       compareView.init();
       distanceCalc.init();
       geoQuiz.init();
+      currencyConverter.init();
 
       // 2. Detect User IP Geolocation
       this.detectUserLocation();
@@ -297,6 +300,9 @@ class GlobalPulseApp {
       <div class="location-info-main">
         <h3 class="location-city-country">${geo.city || 'Detected Region'}, ${geo.country}</h3>
         <span class="location-ip-badge">IP: ${geo.ip} &bull; ${geo.isp}${isGps ? ` &bull; GPS &plusmn;${geo.accuracy}m` : ''}</span>
+        <div class="weather-chip" id="weatherChip">
+          <i class="fa-solid fa-spinner fa-spin"></i> Weather…
+        </div>
       </div>
       <div class="location-stats-grid">
         <div class="loc-stat-item">
@@ -339,6 +345,15 @@ class GlobalPulseApp {
     if (preciseBtn) {
       preciseBtn.onclick = () => this.refineWithGPS(geo, true);
     }
+
+    // Live weather chip (Open-Meteo, no key needed)
+    weatherService.getCurrent(geo.lat, geo.lon).then((w) => {
+      const chip = document.getElementById('weatherChip');
+      if (!chip) return;
+      chip.innerHTML = w
+        ? weatherService.chipHtml(w)
+        : '<i class="fa-solid fa-cloud"></i> Weather unavailable';
+    });
   }
 
   /**
@@ -780,4 +795,11 @@ class GlobalPulseApp {
 document.addEventListener('DOMContentLoaded', () => {
   const app = new GlobalPulseApp();
   app.init();
+
+  // PWA service worker (HTTPS / localhost only)
+  if ('serviceWorker' in navigator && ['https:', 'localhost'].includes(location.protocol)) {
+    navigator.serviceWorker.register('sw.js').catch((err) =>
+      console.info('Service worker not registered:', err.message)
+    );
+  }
 });
