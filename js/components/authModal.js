@@ -132,11 +132,11 @@ class AuthModal {
         try {
             await supabaseService.signIn(email, password);
             this.close();
-            // Automatically navigate to the main dashboard / landing page
-            window.globalPulseApp?.switchTab('explore');
-            const name = supabaseService.profile?.username || 'Explorer';
+            // Automatically navigate to the personalized Explorer Feed / Dashboard
+            window.globalPulseApp?.switchTab('feed');
+            const name = supabaseService.profile?.full_name || supabaseService.profile?.username || 'Explorer';
             if (window.globalPulseApp?.showToast) {
-                window.globalPulseApp.showToast(`Welcome back, ${name}! Your pulse is live. 🌍`, 'success');
+                window.globalPulseApp.showToast(`Welcome back, ${name}! Your session is active. 🌍✨`, 'success');
             }
         } catch (err) {
             this.showError(this.friendlyError(err));
@@ -160,9 +160,9 @@ class AuthModal {
             const { session, user } = await supabaseService.signUp(email, password, username);
             if (session) {
                 this.close(); // auto-signed-in
-                window.globalPulseApp?.switchTab('explore');
+                window.globalPulseApp?.switchTab('feed');
                 if (window.globalPulseApp?.showToast) {
-                    window.globalPulseApp.showToast(`Account created! Welcome to GlobalPulse, ${username}! 🚀`, 'success');
+                    window.globalPulseApp.showToast(`Account created! Welcome to your Dashboard, ${username}! 🚀✨`, 'success');
                 }
             } else if (user && user.identities && user.identities.length === 0) {
                 // Supabase security feature: returns empty identities array if email already exists
@@ -269,7 +269,10 @@ class AuthModal {
           </div>
         </div>
         <hr />
-        <button class="menu-action-btn highlight" data-profile-action="open">
+        <button class="menu-action-btn highlight" data-account-action="go-dashboard">
+          <i class="fa-solid fa-gauge-high"></i> Travel Feed / Dashboard
+        </button>
+        <button class="menu-action-btn" data-profile-action="open">
           <i class="fa-solid fa-id-card"></i> Explorer Profile
         </button>
         <button class="menu-action-btn" data-profile-action="edit">
@@ -318,6 +321,13 @@ class AuthModal {
             return;
         }
 
+        if (action === 'go-dashboard') {
+            window.globalPulseApp?.switchTab('feed');
+            document.getElementById('accountMenu')?.classList.remove('open');
+            document.getElementById('accountChip')?.classList.remove('active');
+            return;
+        }
+
         if (action === 'toggle-sharing') {
             const task = el.checked ? supabaseService.startSharing() : supabaseService.stopSharing();
             task.then(() => this.onSharingChanged?.()).catch(console.warn);
@@ -343,13 +353,15 @@ class AuthModal {
                     this.renderAuthArea(null);
                     this.onAuthStateChanged?.(null);
                     this.onSharingChanged?.();
+                    window.globalPulseApp?.switchTab('explore');
                     if (window.globalPulseApp?.showToast) {
-                        window.globalPulseApp.showToast('Logged out of your session successfully 👋', 'info');
+                        window.globalPulseApp.showToast('You have been signed out. See you next journey! 👋', 'info');
                     }
                 })
                 .catch((err) => {
                     console.warn('Sign out failed:', err.message);
                     this.renderAuthArea(null);
+                    window.globalPulseApp?.switchTab('explore');
                 });
             return;
         }
