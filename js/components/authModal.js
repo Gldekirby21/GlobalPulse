@@ -191,10 +191,12 @@ class AuthModal {
     renderAuthArea(session) {
         if (!this.signInBtn || !this.accountChipWrap) return;
 
-        if (!session) {
+        if (!session || !session.user) {
             this.signInBtn.hidden = false;
+            this.signInBtn.style.display = 'inline-flex';
             this.accountChipWrap.innerHTML = '';
             this.accountChipWrap.hidden = true;
+            this.accountChipWrap.style.display = 'none';
             return;
         }
 
@@ -203,8 +205,13 @@ class AuthModal {
         const color = profile?.avatar_color || '#06b6d4';
         const initial = name.charAt(0).toUpperCase();
 
+        // Hide Sign In button completely when user is logged in
         this.signInBtn.hidden = true;
+        this.signInBtn.style.display = 'none';
+
+        // Show Account Chip Menu
         this.accountChipWrap.hidden = false;
+        this.accountChipWrap.style.display = 'block';
         this.accountChipWrap.innerHTML = `
       <button class="account-chip" id="accountChip" title="Account">
         <span class="avatar-dot" style="--avatar:${color}">${initial}</span>
