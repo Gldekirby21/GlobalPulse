@@ -719,6 +719,7 @@ class GlobalPulseApp {
     const handleAuthChange = (session) => {
       authModal.renderAuthArea(session);
       chatPanel.setSession(session);
+      geoQuiz.setSession(session);
       this.renderFavoritesGrid();
       countriesView.render();
       if (session) {
