@@ -118,56 +118,57 @@
   <!-- Main Workspace -->
   <main class="container">
 
-    <!-- Hero Banner Section -->
-    <section class="hero-section">
-      <div class="hero-grid">
-        <div>
-          <div class="hero-badge">
-            <i class="fa-solid fa-satellite-dish"></i> Live Geospatial Intelligence
-          </div>
-          <h1 class="hero-title">
-            Explore the World with <br />
-            <span class="gradient-text">Real-Time Geography & Geocoding</span>
-          </h1>
-          <p class="hero-subtitle">
-            Harnessing <strong>REST Countries API</strong>, <strong>Nominatim OpenStreetMap</strong>, and <strong>IP
-              Geolocation</strong> into one unified interactive dashboard.
-          </p>
-        </div>
+    <!-- TAB 1: COUNTRIES EXPLORER -->
+    <section class="view-section active-view" id="view-explore">
 
-        <!-- Hero Dynamic Location Card -->
-        <div class="hero-location-card" id="heroLocationCard">
-          <div class="location-card-header">
-            <span class="location-pill"><i class="fa-solid fa-spinner fa-spin"></i> Detecting Pulse...</span>
+      <!-- Hero Banner Section (Explore Tab Only) -->
+      <div class="hero-section">
+        <div class="hero-grid">
+          <div>
+            <div class="hero-badge">
+              <i class="fa-solid fa-satellite-dish"></i> Live Geospatial Intelligence
+            </div>
+            <h1 class="hero-title">
+              Explore the World with <br />
+              <span class="gradient-text">Real-Time Geography & Geocoding</span>
+            </h1>
+            <p class="hero-subtitle">
+              Harnessing <strong>REST Countries API</strong>, <strong>Nominatim OpenStreetMap</strong>, and <strong>IP
+                Geolocation</strong> into one unified interactive dashboard.
+            </p>
           </div>
-          <div class="location-info-main">
-            <h3 class="location-city-country">Detecting Location...</h3>
-            <span class="location-ip-badge">Retrieving coordinates from IP...</span>
-          </div>
-          <div class="location-stats-grid">
-            <div class="loc-stat-item">
-              <span class="loc-stat-label">Coordinates</span>
-              <span class="loc-stat-val">--</span>
+
+          <!-- Hero Dynamic Location Card -->
+          <div class="hero-location-card" id="heroLocationCard">
+            <div class="location-card-header">
+              <span class="location-pill"><i class="fa-solid fa-spinner fa-spin"></i> Detecting Pulse...</span>
             </div>
-            <div class="loc-stat-item">
-              <span class="loc-stat-label">Currency</span>
-              <span class="loc-stat-val">--</span>
+            <div class="location-info-main">
+              <h3 class="location-city-country">Detecting Location...</h3>
+              <span class="location-ip-badge">Retrieving coordinates from IP...</span>
             </div>
-            <div class="loc-stat-item">
-              <span class="loc-stat-label">Timezone</span>
-              <span class="loc-stat-val">--</span>
-            </div>
-            <div class="loc-stat-item">
-              <span class="loc-stat-label">Region</span>
-              <span class="loc-stat-val">--</span>
+            <div class="location-stats-grid">
+              <div class="loc-stat-item">
+                <span class="loc-stat-label">Coordinates</span>
+                <span class="loc-stat-val">--</span>
+              </div>
+              <div class="loc-stat-item">
+                <span class="loc-stat-label">Currency</span>
+                <span class="loc-stat-val">--</span>
+              </div>
+              <div class="loc-stat-item">
+                <span class="loc-stat-label">Timezone</span>
+                <span class="loc-stat-val">--</span>
+              </div>
+              <div class="loc-stat-item">
+                <span class="loc-stat-label">Region</span>
+                <span class="loc-stat-val">--</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- TAB 1: COUNTRIES EXPLORER -->
-    <section class="view-section active-view" id="view-explore">
       <!-- Search & Filters Toolbar -->
       <div class="controls-bar">
         <div class="search-input-wrapper">
