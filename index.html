@@ -88,6 +88,10 @@
           <i class="fa-solid fa-route"></i>
           <span>Distance</span>
         </button>
+        <button class="nav-tab-btn" data-tab="quiz" id="tabBtnQuiz">
+          <i class="fa-solid fa-gamepad"></i>
+          <span>Quiz Arena</span>
+        </button>
         <button class="nav-tab-btn" data-tab="ai" id="tabBtnAI">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
           <span>AI Guide</span>
@@ -402,6 +406,26 @@
       </div>
     </section>
 
+    <!-- TAB 5.5: QUIZ ARENA -->
+    <section class="view-section" id="view-quiz">
+      <div class="quiz-layout">
+        <!-- Quiz Game Panel -->
+        <div class="quiz-panel" id="quizArena"></div>
+
+        <!-- Global Leaderboard -->
+        <aside class="leaderboard-panel-wrap">
+          <div class="leaderboard-header">
+            <i class="fa-solid fa-trophy"></i>
+            <div>
+              <h3>Global Leaderboard</h3>
+              <p style="font-size:0.8rem; color:var(--text-muted);">Best rounds from explorers worldwide</p>
+            </div>
+          </div>
+          <div class="leaderboard-list" id="leaderboardPanel"></div>
+        </aside>
+      </div>
+    </section>
+
     <!-- TAB 6: SAVED BUCKET LIST -->
     <section class="view-section" id="view-saved">
       <div
@@ -466,9 +490,6 @@
     </div>
   </div>
 
-  <!-- Toast Notification Container -->
-  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
-
   <!-- Mobile Bottom Navigation Bar -->
   <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
     <button class="mob-nav-item active" data-tab="explore">
@@ -486,6 +507,10 @@
     <button class="mob-nav-item" data-tab="distance">
       <i class="fa-solid fa-route"></i>
       <span>Distance</span>
+    </button>
+    <button class="mob-nav-item" data-tab="quiz">
+      <i class="fa-solid fa-gamepad"></i>
+      <span>Quiz</span>
     </button>
     <button class="mob-nav-item" data-tab="ai">
       <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -575,6 +600,10 @@
     <button class="mob-nav-item" data-tab="distance" id="mobTabDistance">
       <i class="fa-solid fa-route"></i>
       <span>Distance</span>
+    </button>
+    <button class="mob-nav-item" data-tab="quiz" id="mobTabQuiz">
+      <i class="fa-solid fa-gamepad"></i>
+      <span>Quiz</span>
     </button>
     <button class="mob-nav-item" data-tab="ai" id="mobTabAI">
       <i class="fa-solid fa-wand-magic-sparkles"></i>

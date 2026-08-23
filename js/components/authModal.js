@@ -5,6 +5,7 @@
  */
 
 import { supabaseService } from '../services/supabaseService.js';
+import { gamificationService } from '../services/gamificationService.js';
 
 class AuthModal {
     constructor() {
@@ -227,6 +228,7 @@ class AuthModal {
         const color = profile?.avatar_color || '#06b6d4';
         const initial = name.charAt(0).toUpperCase();
         const email = session.user?.email || '';
+        const lvl = gamificationService.levelFor(profile?.xp || 0);
 
         // Hide Sign In button completely when user is logged in
         this.signInBtn.hidden = true;
@@ -247,6 +249,14 @@ class AuthModal {
           <div class="menu-user-details">
             <div class="menu-user-name">${name}</div>
             <div class="menu-user-email">${email}</div>
+            <div class="menu-user-level">
+              <span class="level-pill">${lvl.name}</span>
+              <span class="level-xp">${profile?.xp || 0} XP</span>
+            </div>
+            ${lvl.next ? `
+              <div class="level-progress" title="Progress to ${lvl.next}">
+                <div class="level-progress-fill" style="width:${Math.round(lvl.progress * 100)}%"></div>
+              </div>` : ''}
           </div>
         </div>
         <hr />

@@ -14,6 +14,7 @@ import { distanceCalc } from './components/distanceCalc.js';
 import { aiGuide } from './components/aiGuide.js';
 import { favoritesManager } from './components/favorites.js';
 import { authModal } from './components/authModal.js';
+import { geoQuiz } from './components/geoQuiz.js';
 
 class GlobalPulseApp {
   constructor() {
@@ -206,6 +207,7 @@ class GlobalPulseApp {
       countriesView.render();
       compareView.init();
       distanceCalc.init();
+      geoQuiz.init();
 
       // 2. Detect User IP Geolocation
       this.detectUserLocation();
@@ -266,13 +268,25 @@ class GlobalPulseApp {
 
     const isGps = geo.source === 'gps';
 
+    // Resolve country data to get authentic currency and official flag
+    const countryData = countriesService.getCountryByCode(geo.countryCode) || countriesService.getCountryByName(geo.country);
+    
+    let displayCurrency = geo.currency;
+    if (countryData && countryData.currencies) {
+      displayCurrency = countriesService.getCurrenciesString(countryData);
+    } else if (geo.countryCode === 'PH' || geo.country?.toLowerCase().includes('philippines')) {
+      displayCurrency = 'Philippine peso (PHP)';
+    }
+
+    const flagSrc = countryData?.flags?.svg || countryData?.flags?.png || geo.flag;
+
     heroCard.innerHTML = `
       <div class="location-card-header">
         <span class="location-pill">
           <i class="fa-solid fa-${isGps ? 'satellite-dish' : 'circle-dot'}"></i>
           ${isGps ? 'Precise GPS Lock' : 'Live Pulse Detected'}
         </span>
-        <img src="${geo.flag}" alt="${geo.country}" class="location-flag-large" />
+        <img src="${flagSrc}" alt="${geo.country}" class="location-flag-large" />
       </div>
       <div class="location-info-main">
         <h3 class="location-city-country">${geo.city || 'Detected Region'}, ${geo.country}</h3>
@@ -285,7 +299,7 @@ class GlobalPulseApp {
         </div>
         <div class="loc-stat-item">
           <span class="loc-stat-label">Local Currency</span>
-          <span class="loc-stat-val">${geo.currency}</span>
+          <span class="loc-stat-val">${displayCurrency}</span>
         </div>
         <div class="loc-stat-item">
           <span class="loc-stat-label">Timezone</span>

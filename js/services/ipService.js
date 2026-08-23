@@ -80,7 +80,7 @@ class IPService {
             lon: coords.lon,
             timezone: data.timezone?.id || 'UTC',
             isp: data.connection?.isp || data.connection?.org || 'Standard ISP',
-            currency: data.currency?.code || 'USD',
+            currency: data.currency?.code || (data.country_code === 'PH' ? 'PHP' : 'USD'),
             flag: data.flag?.img || `https://flagcdn.com/w80/${(data.country_code || 'ph').toLowerCase()}.png`
           };
         }
@@ -107,7 +107,7 @@ class IPService {
               lon: coords.lon,
               timezone: data.timeZones?.[0] || 'UTC',
               isp: 'Broadband / Mobile Network',
-              currency: data.currencies?.[0] || 'USD',
+              currency: data.currencies?.[0] || (data.countryCode === 'PH' ? 'PHP' : 'USD'),
               flag: `https://flagcdn.com/w80/${(data.countryCode || 'ph').toLowerCase()}.png`
             };
           }
@@ -135,7 +135,7 @@ class IPService {
               lon: coords.lon,
               timezone: data.timezone || 'UTC',
               isp: data.org || 'Internet Provider',
-              currency: data.currency || 'USD',
+              currency: data.currency || (data.country_code === 'PH' ? 'PHP' : 'USD'),
               flag: `https://flagcdn.com/w80/${(data.country_code || 'ph').toLowerCase()}.png`
             };
           }
