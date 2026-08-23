@@ -157,16 +157,19 @@ class ChatPanel {
     /* ----------------------------- Session ----------------------------- */
 
     setSession(session) {
+        const navBtn = document.getElementById('tabBtnChat');
+        const headerBtn = document.getElementById('chatToggleBtn');
+
         if (session) {
-            const btn = document.getElementById('chatToggleBtn');
-            if (btn) btn.hidden = false;
+            if (navBtn) navBtn.hidden = false;
+            if (headerBtn) headerBtn.hidden = false;
             if (this._tabsEl) this._tabsEl.hidden = false;
             this.loadFriends();
             this.subscribe();
             this.refreshUnread();
         } else {
-            const btn = document.getElementById('chatToggleBtn');
-            if (btn) btn.hidden = true;
+            if (navBtn) navBtn.hidden = true;
+            if (headerBtn) headerBtn.hidden = true;
             if (this._tabsEl) this._tabsEl.hidden = true;
             this.close();
             this.unsubscribe();
@@ -175,6 +178,11 @@ class ChatPanel {
             this.outgoing.clear();
             this.unreadByPeer.clear();
             this.updateBadge();
+
+            // If a guest was on the chat tab, redirect back to explore
+            if (window.globalPulseApp?.activeTab === 'chat') {
+                window.globalPulseApp.switchTab('explore');
+            }
         }
     }
 

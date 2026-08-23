@@ -5712,3 +5712,133 @@ body {
     display: none;
   }
 }
+
+/* ==========================================================================
+   FEED POLISH — Facebook-style finishing touches
+   ========================================================================== */
+
+/* Empty feed state */
+.msg-empty-notice {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-glass-strong);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+}
+
+.msg-empty-notice i {
+  font-size: 2.6rem;
+  color: var(--accent-cyan);
+  opacity: 0.7;
+  margin-bottom: 0.75rem;
+}
+
+/* Comments count on the stats bar */
+.post-comments-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* Card hover lift — subtle, Facebook-like */
+.feed-post-card {
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.feed-post-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Reaction emoji stack overlaps like FB */
+.reaction-icons-stack span,
+.reaction-icons-stack i {
+  display: inline-flex;
+  margin-right: -6px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--bg-surface);
+}
+
+.reaction-icons-stack span:last-child,
+.reaction-icons-stack i:last-child {
+  margin-right: 0;
+}
+
+/* Story ring gradient (unseen stories) */
+.story-avatar-ring {
+  background: conic-gradient(
+    from 180deg,
+    #06b6d4,
+    #3b82f6,
+    #8b5cf6,
+    #ec4899,
+    #06b6d4
+  );
+}
+
+/*==========================================================================
+   FEED POLISH — missing pieces + Facebook-style finishing touches
+   ==========================================================================*/
+
+/*Empty feed state*/
+.msg-empty-notice {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-glass-strong);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+}
+
+.msg-empty-notice i {
+  font-size: 2.6rem;
+  color: var(--accent-cyan);
+  opacity: 0.7;
+  margin-bottom: 0.75rem;
+}
+
+/*Comments count on the stats bar*/
+.post-comments-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/*Card hover lift — subtle, Facebook-like*/
+.feed-post-card {
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.feed-post-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/*Reaction emoji stack overlaps like FB*/
+.reaction-icons-stack span,
+.reaction-icons-stack i {
+  display: inline-flex;
+  margin-right: -6px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--bg-surface);
+}
+
+.reaction-icons-stack span:last-child,
+.reaction-icons-stack i:last-child {
+  margin-right: 0;
+}
+
+/*Story ring gradient (unseen stories)*/
+.story-avatar-ring {
+  background: conic-gradient(
+    from 180deg,
+    #06b6d4,
+    #3b82f6,
+    #8b5cf6,
+    #ec4899,
+    #06b6d4
+  );
+}
