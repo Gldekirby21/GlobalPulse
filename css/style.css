@@ -297,6 +297,7 @@ img {
   background: var(--grad-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
   white-space: nowrap;
 }
 
@@ -475,6 +476,7 @@ img {
   background: var(--grad-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .hero-subtitle {
@@ -2760,17 +2762,39 @@ img {
 /* ==========================================================================
    CHAT PANEL & DIRECT MESSAGES DRAWER
    ========================================================================== */
+/* Base pill (used inline in conversation rows) */
 .chat-unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--accent-rose);
   color: #ffffff;
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 800;
-  padding: 0.15rem 0.4rem;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
   border-radius: var(--radius-full);
   line-height: 1;
+}
+
+/* Header button variant — pinned to the icon's corner */
+#chatToggleBtn {
+  position: relative;
+}
+
+#chatToggleBtn .chat-unread-badge {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: -4px;
+  right: -4px;
+  z-index: 2;
+  box-shadow: 0 0 0 2px var(--bg-base);
+  pointer-events: none;
+}
+
+/* The hidden attribute must always win over the display styles above */
+.chat-unread-badge[hidden] {
+  display: none !important;
 }
 
 .chat-drawer {
@@ -3876,6 +3900,7 @@ img {
 }
 
 @media (max-width: 600px) {
+
   .profile-details-grid,
   .profile-form-grid,
   .avatar-edit-section {

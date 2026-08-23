@@ -37,6 +37,7 @@ class GlobalPulseApp {
 
     // 2. Tab Navigation Setup
     this.setupTabs();
+    this.restoreLastTab();
 
     // 3. Initialize Interactive Components & Auth
     authModal.init();
@@ -180,6 +181,9 @@ class GlobalPulseApp {
   switchTab(tabId) {
     this.activeTab = tabId;
 
+    // Remember position across reloads
+    try { localStorage.setItem('globalpulse_tab', tabId); } catch (e) { /* storage blocked */ }
+
     // Update Nav Buttons
     document.querySelectorAll('[data-tab]').forEach(btn => {
       const isTarget = btn.dataset.tab === tabId;
@@ -244,6 +248,7 @@ class GlobalPulseApp {
 
       // Initialize Leaflet Map centered around user location
       mapManager.init('leafletMap', geo.lat, geo.lon);
+      this.restoreMapLayer();
       mapManager.setUserLocation(geo.lat, geo.lon, `Your Location: ${geo.city}, ${geo.country}`);
 
       // IP geolocation only resolves to the ISP's registered area (often a
@@ -252,6 +257,7 @@ class GlobalPulseApp {
     } catch (err) {
       console.warn('Geolocation detection failed:', err);
       mapManager.init('leafletMap', 14.5995, 120.9842);
+      this.restoreMapLayer();
     }
   }
 
@@ -507,8 +513,35 @@ class GlobalPulseApp {
         document.querySelectorAll('.map-layer-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         mapManager.setLayer(btn.dataset.layer);
+        try { localStorage.setItem('globalpulse_maplayer', btn.dataset.layer); } catch (e) { /* blocked */ }
       });
     });
+  }
+
+  /**
+   * Session persistence — bring the user back exactly where they left off:
+   * last active tab, chosen basemap, etc. survive browser refreshes.
+   */
+  restoreLastTab() {
+    let last = null;
+    try { last = localStorage.getItem('globalpulse_tab'); } catch (e) { /* blocked */ }
+    if (last && last !== 'explore' && document.getElementById(`view-${last}`)) {
+      this.switchTab(last);
+    }
+  }
+
+  restoreMapLayer() {
+    let saved = null;
+    try { saved = localStorage.getItem('globalpulse_maplayer'); } catch (e) { /* blocked */ }
+    if (!saved) return;
+
+    const btn = document.querySelector(`.map-layer-btn[data-layer="${saved}"]`);
+    if (!btn) return;
+
+    document.querySelectorAll('.map-layer-btn').forEach(b =>
+      b.classList.toggle('active', b === btn)
+    );
+    mapManager.setLayer(saved);
   }
 
   updateReverseGeocodeCard(info) {

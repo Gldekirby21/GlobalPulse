@@ -24,6 +24,8 @@ export const BADGES = {
     globetrotter_1000km: { icon: 'fa-route', label: 'Long Hauler' }
 };
 
+export const gamificationBadges = BADGES;
+
 class GamificationService {
     get ready() {
         return supabaseService.configured && !!supabaseService.user;

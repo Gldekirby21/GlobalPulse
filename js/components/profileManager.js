@@ -5,7 +5,7 @@
  */
 
 import { supabaseService } from '../services/supabaseService.js';
-import { gamificationService, gamificationBadges } from '../services/gamificationService.js';
+import { gamificationService, BADGES, gamificationBadges } from '../services/gamificationService.js';
 import { countriesService } from '../services/countriesService.js';
 import { isAuthenticated, bindAuthTriggers } from '../utils/access.js';
 

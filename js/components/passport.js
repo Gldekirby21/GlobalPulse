@@ -5,7 +5,7 @@
  */
 
 import { supabaseService } from '../services/supabaseService.js';
-import { gamificationService } from '../services/gamificationService.js';
+import { gamificationService, BADGES as gamificationBadges } from '../services/gamificationService.js';
 import { countriesService } from '../services/countriesService.js';
 import { isAuthenticated, lockOverlayHtml, bindAuthTriggers } from '../utils/access.js';
 
@@ -352,8 +352,5 @@ class Passport {
     if (id) this.openProfileCard(id);
   }
 }
-
-// Badge catalog re-export for the profile card renderer
-import { BADGES as gamificationBadges } from '../services/gamificationService.js';
 
 export const passport = new Passport();
