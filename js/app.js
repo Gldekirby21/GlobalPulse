@@ -519,8 +519,34 @@ class GlobalPulseApp {
 
   renderFavoritesGrid() {
     const container = document.getElementById('favoritesGrid');
+    const exportBtn = document.getElementById('btnExportFavorites');
     if (!container) return;
 
+    // Check if user is logged in
+    if (!supabaseService.user) {
+      if (exportBtn) exportBtn.style.display = 'none';
+      container.innerHTML = `
+        <div class="favorites-empty-state" style="grid-column: 1/-1; border-color: rgba(244, 63, 94, 0.3); background: rgba(244, 63, 94, 0.04); padding: 3.5rem 1.5rem;">
+          <div class="favorites-empty-icon" style="color: var(--accent-rose); background: rgba(244, 63, 94, 0.12); width: 68px; height: 68px; font-size: 1.75rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <h3 style="font-size: 1.3rem; margin-bottom: 0.4rem;">Travel Bucket List is Locked</h3>
+          <p style="color: var(--text-muted); font-size: 0.92rem; max-width: 440px; margin: 0 auto 1.5rem; line-height: 1.5;">
+            Please sign in to your GlobalPulse account to save your favorite countries and view your personal travel bucket list.
+          </p>
+          <button class="auth-submit-btn" id="btnUnlockSaved" style="width: auto; padding: 0.7rem 2rem; margin: 0 auto; font-size: 0.92rem; cursor: pointer;">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In to Access
+          </button>
+        </div>
+      `;
+
+      document.getElementById('btnUnlockSaved')?.addEventListener('click', () => {
+        authModal.open('signin');
+      });
+      return;
+    }
+
+    if (exportBtn) exportBtn.style.display = 'inline-flex';
     const favorites = favoritesManager.getFavorites();
 
     if (favorites.length === 0) {
@@ -590,15 +616,22 @@ class GlobalPulseApp {
     const toggleBtn = document.getElementById('communityToggleBtn');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', () => {
-        const active = toggleBtn.classList.toggle('active');
-        toggleBtn.innerHTML = `<i class="fa-solid fa-${active ? 'eye' : 'eye-slash'}"></i>`;
-        mapManager.toggleCommunityMarkers(active);
+        if (!supabaseService.user) {
+          authModal.open('signin');
+          return;
+        }
+        const task = supabaseService.sharingEnabled ? supabaseService.stopSharing() : supabaseService.startSharing();
+        task.then(() => {
+          authModal.renderAuthArea({ user: supabaseService.user, profile: supabaseService.profile });
+        });
       });
     }
 
     // Auth callbacks
     authModal.onAuthStateChanged = (session) => {
       authModal.renderAuthArea(session);
+      this.renderFavoritesGrid();
+      countriesView.render();
       if (session) {
         supabaseService.publishLocation();
         supabaseService.startHeartbeat();
@@ -617,6 +650,8 @@ class GlobalPulseApp {
     // Initialize Supabase session
     supabaseService.init((session) => {
       authModal.renderAuthArea(session);
+      this.renderFavoritesGrid();
+      countriesView.render();
       if (session) {
         supabaseService.publishLocation();
         supabaseService.startHeartbeat();

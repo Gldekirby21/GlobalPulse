@@ -5,6 +5,8 @@
 
 import { countriesService } from '../services/countriesService.js';
 import { favoritesManager } from './favorites.js';
+import { supabaseService } from '../services/supabaseService.js';
+import { authModal } from './authModal.js';
 
 class CountriesView {
   constructor() {
@@ -110,6 +112,15 @@ class CountriesView {
     // Favorite heart button events
     this.container.querySelectorAll('.favorite-btn-card').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!supabaseService.user) {
+          if (window.globalPulseApp?.showToast) {
+            window.globalPulseApp.showToast('Please sign in to save places to your bucket list! 🔒', 'info');
+          }
+          authModal.open('signin');
+          return;
+        }
+
         const cca3 = btn.dataset.cca3;
         const country = countriesService.getCountryByCode(cca3);
         if (country) {
@@ -270,6 +281,14 @@ class CountriesView {
     const favBtn = document.getElementById('modalFavBtn');
     if (favBtn) {
       favBtn.onclick = () => {
+        if (!supabaseService.user) {
+          if (window.globalPulseApp?.showToast) {
+            window.globalPulseApp.showToast('Please sign in to save places to your bucket list! 🔒', 'info');
+          }
+          authModal.open('signin');
+          return;
+        }
+
         if (!this.currentCountry) return;
         const added = favoritesManager.toggleFavorite({
           id: this.currentCountry.cca3,
