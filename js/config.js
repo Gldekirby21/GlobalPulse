@@ -11,10 +11,13 @@
  * protected by Row Level Security policies in supabase/schema.sql.
  */
 
+// Load dynamic environment variables if available (e.g. from window.__ENV__ or deployment injection)
+const env = (typeof window !== 'undefined' && window.__ENV__) || {};
+
 const config = {
     supabase: {
-        url: 'https://nswppvxwgjydntuhpqig.supabase.co', // e.g. 'https://abcdefghijk.supabase.co'
-        anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zd3Bwdnh3Z2p5ZG50dWhwcWlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0NDE0MDIsImV4cCI6MjEwMzAxNzQwMn0.mzRJxes_0mTm91dlnzlUKVSX7tZDuSGTwJ0VGC83w44' // e.g. 'eyJhbGciOiJIUzI1NiIsInR5cCI6...'
+        url: env.SUPABASE_URL || 'https://nswppvxwgjydntuhpqig.supabase.co',
+        anonKey: env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zd3Bwdnh3Z2p5ZG50dWhwcWlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0NDE0MDIsImV4cCI6MjEwMzAxNzQwMn0.mzRJxes_0mTm91dlnzlUKVSX7tZDuSGTwJ0VGC83w44'
     }
 };
 
