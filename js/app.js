@@ -1,0 +1,615 @@
+/**
+ * GlobalPulse - Main Application Controller
+ * Bootstraps services, handles routing/tabs, theme switching, and global state.
+ */
+
+import { ipService } from './services/ipService.js';
+import { countriesService } from './services/countriesService.js';
+import { nominatimService } from './services/nominatimService.js';
+import { mapManager } from './components/mapManager.js';
+import { countriesView } from './components/countriesView.js';
+import { compareView } from './components/compareView.js';
+import { distanceCalc } from './components/distanceCalc.js';
+import { aiGuide } from './components/aiGuide.js';
+import { favoritesManager } from './components/favorites.js';
+
+class GlobalPulseApp {
+  constructor() {
+    this.userLocation = null;
+    this.activeTab = 'explore';
+  }
+
+  async init() {
+    console.log('🌍 Initializing GlobalPulse Web System...');
+
+    // 1. Theme Setup
+    this.setupTheme();
+
+    // 2. Tab Navigation Setup
+    this.setupTabs();
+
+    // 3. Initialize Interactive Components
+    countriesView.init();
+    aiGuide.init();
+    distanceCalc.init();
+
+    // 4. Setup Map & Locate Callbacks
+    countriesView.setOnLocate((lat, lon, name) => {
+      this.switchTab('map');
+      mapManager.setSearchLocation(lat, lon, name);
+    });
+
+    distanceCalc.setOnViewOnMap(() => {
+      this.switchTab('map');
+    });
+
+    mapManager.setOnCountrySelect((country) => {
+      countriesView.openDetailModal(country);
+    });
+
+    mapManager.setOnReverseGeocode((geoInfo) => {
+      this.updateReverseGeocodeCard(geoInfo);
+    });
+
+    // 5. Setup Nominatim Search Bar in Map Tab
+    this.setupNominatimSearch();
+
+    // 6. Setup Search & Filters in Countries Tab
+    this.setupCountryFilters();
+
+    // 7. Setup Saved Places View & Listeners
+    this.setupFavoritesView();
+
+    // 8. Fetch Countries & Auto-Detect Location Asynchronously
+    await this.loadInitialData();
+  }
+
+  /**
+   * Theme Controller (Dark / Light mode)
+   * Priority: user's explicit choice > OS preference > dark default.
+   */
+  setupTheme() {
+    const media = window.matchMedia('(prefers-color-scheme: light)');
+    const saved = localStorage.getItem('globalpulse_theme');
+    const initial = (saved === 'light' || saved === 'dark')
+      ? saved
+      : (media.matches ? 'light' : 'dark');
+
+    document.documentElement.setAttribute('data-theme', initial);
+    this.updateThemeIcon(initial);
+    this.updateThemeColorMeta(initial);
+
+    // Follow OS-level theme changes live until the user chooses manually
+    const onSystemChange = (e) => {
+      if (localStorage.getItem('globalpulse_theme')) return;
+      this.setTheme(e.matches ? 'light' : 'dark', { animate: true });
+    };
+    if (media.addEventListener) media.addEventListener('change', onSystemChange);
+    else if (media.addListener) media.addListener(onSystemChange); // older Safari
+
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        this.setTheme(next, { persist: true, animate: true });
+      });
+    }
+  }
+
+  /**
+   * Apply a theme across the whole system: CSS variables, toggle icon,
+   * browser chrome color, and basemap tiles — with smooth cross-fade.
+   */
+  setTheme(theme, { persist = false, animate = false } = {}) {
+    const root = document.documentElement;
+
+    if (animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.classList.add('theme-anim');
+      clearTimeout(this._themeAnimTimer);
+      this._themeAnimTimer = setTimeout(() => root.classList.remove('theme-anim'), 450);
+    }
+
+    root.setAttribute('data-theme', theme);
+    if (persist) localStorage.setItem('globalpulse_theme', theme);
+
+    this.updateThemeIcon(theme);
+    this.updateThemeColorMeta(theme);
+    this.applyMapTheme(theme);
+  }
+
+  updateThemeIcon(theme) {
+    const icon = document.querySelector('#themeToggleBtn i');
+    if (icon) {
+      icon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    }
+  }
+
+  updateThemeColorMeta(theme) {
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'theme-color');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', theme === 'light' ? '#f1f5f9' : '#0a0f1d');
+  }
+
+  /**
+   * Sync the Leaflet basemap + floating layer buttons with the theme
+   */
+  applyMapTheme(theme) {
+    mapManager.applyTheme(theme);
+
+    const themedKey = theme === 'light' ? 'dark' : 'cartoDark';
+    document.querySelectorAll('.map-layer-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.layer === themedKey);
+    });
+  }
+
+  /**
+   * Tab Navigation System
+   */
+  setupTabs() {
+    const tabButtons = document.querySelectorAll('[data-tab]');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.dataset.tab;
+        this.switchTab(targetTab);
+      });
+    });
+  }
+
+  switchTab(tabId) {
+    this.activeTab = tabId;
+
+    // Update Nav Buttons
+    document.querySelectorAll('[data-tab]').forEach(btn => {
+      const isTarget = btn.dataset.tab === tabId;
+      btn.classList.toggle('active', isTarget);
+    });
+
+    // Update Sections
+    document.querySelectorAll('.view-section').forEach(sec => {
+      sec.classList.remove('active-view');
+    });
+
+    const targetSection = document.getElementById(`view-${tabId}`);
+    if (targetSection) {
+      targetSection.classList.add('active-view');
+    }
+
+    // Tab-specific lifecycle actions
+    if (tabId === 'map') {
+      mapManager.invalidateSize();
+    } else if (tabId === 'compare') {
+      compareView.init();
+    } else if (tabId === 'saved') {
+      this.renderFavoritesGrid();
+    }
+  }
+
+  /**
+   * Load data on startup
+   */
+  async loadInitialData() {
+    try {
+      // 1. Fetch Countries
+      await countriesService.getAllCountries();
+      countriesView.render();
+      compareView.init();
+      distanceCalc.init();
+
+      // 2. Detect User IP Geolocation
+      this.detectUserLocation();
+    } catch (err) {
+      console.error('Error during initial load:', err);
+      this.showToast('Could not load country data. Please check network connection.', 'error');
+    }
+  }
+
+  async detectUserLocation() {
+    try {
+      const geo = await ipService.detectLocation();
+
+      // Defensive guard: never feed Leaflet non-numeric coordinates
+      geo.lat = Number(geo?.lat);
+      geo.lon = Number(geo?.lon);
+      if (!Number.isFinite(geo.lat) || !Number.isFinite(geo.lon)) {
+        throw new Error(`IP service returned invalid coordinates: (${geo.lat}, ${geo.lon})`);
+      }
+
+      this.userLocation = geo;
+      console.log('📍 User location detected (IP estimate):', geo);
+
+      this.renderLocationUI(geo);
+
+      // Initialize Leaflet Map centered around user location
+      mapManager.init('leafletMap', geo.lat, geo.lon);
+      mapManager.setUserLocation(geo.lat, geo.lon, `Your Location: ${geo.city}, ${geo.country}`);
+
+      this.showToast(`Welcome! Located in ${geo.city || geo.country} 🌍`, 'success');
+
+      // IP geolocation only resolves to the ISP's registered area (often a
+      // regional center), so refine with precise device GPS in the background
+      this.refineWithGPS(geo);
+    } catch (err) {
+      console.warn('Geolocation detection failed:', err);
+      mapManager.init('leafletMap', 14.5995, 120.9842);
+    }
+  }
+
+  /**
+   * Render header geo chip + hero location card from a geo object
+   */
+  renderLocationUI(geo) {
+    // Header Chip
+    const geoChip = document.getElementById('userGeoChip');
+    if (geoChip) {
+      geoChip.innerHTML = `
+        <span class="pulse-dot"></span>
+        <span>${geo.city ? `${geo.city}, ` : ''}${geo.countryCode}</span>
+      `;
+      geoChip.onclick = () => {
+        this.switchTab('map');
+        mapManager.setUserLocation(geo.lat, geo.lon, `${geo.city}, ${geo.country}`);
+      };
+    }
+
+    // Hero Live Location Card
+    const heroCard = document.getElementById('heroLocationCard');
+    if (!heroCard) return;
+
+    const isGps = geo.source === 'gps';
+
+    heroCard.innerHTML = `
+      <div class="location-card-header">
+        <span class="location-pill">
+          <i class="fa-solid fa-${isGps ? 'satellite-dish' : 'circle-dot'}"></i>
+          ${isGps ? 'Precise GPS Lock' : 'Live Pulse Detected'}
+        </span>
+        <img src="${geo.flag}" alt="${geo.country}" class="location-flag-large" />
+      </div>
+      <div class="location-info-main">
+        <h3 class="location-city-country">${geo.city || 'Detected Region'}, ${geo.country}</h3>
+        <span class="location-ip-badge">IP: ${geo.ip} &bull; ${geo.isp}${isGps ? ` &bull; GPS &plusmn;${geo.accuracy}m` : ''}</span>
+      </div>
+      <div class="location-stats-grid">
+        <div class="loc-stat-item">
+          <span class="loc-stat-label">Coordinates</span>
+          <span class="loc-stat-val">${geo.lat.toFixed(4)}&deg; N, ${geo.lon.toFixed(4)}&deg; E</span>
+        </div>
+        <div class="loc-stat-item">
+          <span class="loc-stat-label">Local Currency</span>
+          <span class="loc-stat-val">${geo.currency}</span>
+        </div>
+        <div class="loc-stat-item">
+          <span class="loc-stat-label">Timezone</span>
+          <span class="loc-stat-val">${geo.timezone}</span>
+        </div>
+        <div class="loc-stat-item">
+          <span class="loc-stat-label">Region</span>
+          <span class="loc-stat-val">${geo.region || 'National'}</span>
+        </div>
+      </div>
+      <button class="quick-view-my-country-btn" id="btnExploreMyCountry">
+        <i class="fa-solid fa-compass"></i> Explore ${geo.country} Facts
+      </button>
+      ${!isGps ? `
+        <button class="quick-view-my-country-btn" id="btnPreciseLocate"
+          style="margin-top:0.5rem; background:transparent; border:1px solid var(--accent-cyan); color:var(--accent-cyan);">
+          <i class="fa-solid fa-crosshairs"></i> Use My Precise GPS Location
+        </button>
+      ` : ''}
+    `;
+
+    const exploreBtn = document.getElementById('btnExploreMyCountry');
+    if (exploreBtn) {
+      exploreBtn.onclick = () => {
+        const country = countriesService.getCountryByCode(geo.countryCode);
+        if (country) countriesView.openDetailModal(country);
+      };
+    }
+
+    const preciseBtn = document.getElementById('btnPreciseLocate');
+    if (preciseBtn) {
+      preciseBtn.onclick = () => this.refineWithGPS(geo, true);
+    }
+  }
+
+  /**
+   * Upgrade the IP-based location to precise device GPS coordinates.
+   * Asks the browser for hardware coordinates (with user permission),
+   * reverse-geocodes them for accurate city/region names, then re-renders
+   * the UI and moves the map marker. Falls back silently to IP location.
+   * @param {Object} geo - mutable geo object shared with this.userLocation
+   * @param {boolean} manual - true when triggered by user button click
+   */
+  async refineWithGPS(geo, manual = false) {
+    try {
+      const gps = await ipService.getBrowserGPS();
+
+      if (!Number.isFinite(gps.lat) || !Number.isFinite(gps.lon)) {
+        throw new Error('GPS returned invalid coordinates');
+      }
+
+      const drifted = Math.abs(gps.lat - geo.lat) > 0.02 || Math.abs(gps.lon - geo.lon) > 0.02;
+
+      geo.lat = gps.lat;
+      geo.lon = gps.lon;
+      geo.accuracy = Math.round(gps.accuracy);
+      geo.source = 'gps';
+
+      // Best-effort reverse geocode for accurate place labels
+      try {
+        const info = await nominatimService.reverseGeocode(geo.lat, geo.lon);
+        if (info && info.displayName) {
+          if (info.city) geo.city = info.city;
+          if (info.state) geo.region = info.state;
+          if (info.country) geo.country = info.country;
+          if (info.countryCode) geo.countryCode = info.countryCode;
+          geo.displayName = info.displayName;
+        }
+      } catch (_) {
+        /* keep IP-derived labels */
+      }
+
+      ipService.updateCachedLocation(geo);
+      this.userLocation = geo;
+      console.log('🎯 Precise GPS location:', geo);
+
+      this.renderLocationUI(geo);
+
+      // Move the pulsing marker to the precise position
+      if (mapManager.map) {
+        mapManager.setUserLocation(geo.lat, geo.lon, `Your Location: ${geo.city}, ${geo.country}`);
+      }
+
+      this.showToast(
+        drifted ? `📍 Precise GPS locked: ${geo.city || geo.country}` : '📍 Location refined via GPS',
+        'success'
+      );
+    } catch (err) {
+      const reason =
+        err && err.code === 1 ? 'permission denied' :
+          err && err.code === 3 ? 'timed out' :
+            (err && err.message) || 'unavailable';
+      console.info('Precise GPS not used — staying with IP-based location:', reason);
+
+      if (manual) {
+        this.showToast(`GPS ${reason}. Using IP-based location instead.`, 'error');
+      }
+    }
+  }
+
+  /**
+   * Countries Tab Search & Filters
+   */
+  setupCountryFilters() {
+    const searchInput = document.getElementById('countrySearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        countriesView.searchQuery = e.target.value;
+        countriesView.render();
+      });
+    }
+
+    const sortSelect = document.getElementById('countrySortSelect');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', (e) => {
+        countriesView.currentSort = e.target.value;
+        countriesView.render();
+      });
+    }
+
+    const regionPills = document.querySelectorAll('.region-pill-btn');
+    regionPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        regionPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        countriesView.activeRegion = pill.dataset.region;
+        countriesView.render();
+      });
+    });
+  }
+
+  /**
+   * Nominatim Geocoding Search Box
+   */
+  setupNominatimSearch() {
+    const input = document.getElementById('nominatimInput');
+    const resultsList = document.getElementById('nominatimResults');
+
+    if (!input || !resultsList) return;
+
+    const debouncedSearch = nominatimService.debounce(async (val) => {
+      if (!val || val.length < 2) {
+        resultsList.innerHTML = '';
+        return;
+      }
+
+      resultsList.innerHTML = `
+        <div style="padding: 0.5rem; text-align: center; color: var(--text-muted); font-size: 0.82rem;">
+          <i class="fa-solid fa-spinner fa-spin"></i> Searching Nominatim OpenStreetMap...
+        </div>
+      `;
+
+      const results = await nominatimService.searchAddress(val);
+
+      if (results.length === 0) {
+        resultsList.innerHTML = `
+          <div style="padding: 0.5rem; color: var(--text-muted); font-size: 0.82rem;">No address or landmark found.</div>
+        `;
+        return;
+      }
+
+      resultsList.innerHTML = results.map((item, idx) => `
+        <div class="nominatim-result-item" data-idx="${idx}">
+          <div class="nominatim-result-title">${item.name}</div>
+          <div class="nominatim-result-coords">${item.displayName}</div>
+        </div>
+      `).join('');
+
+      resultsList.querySelectorAll('.nominatim-result-item').forEach(itemElem => {
+        itemElem.addEventListener('click', () => {
+          const idx = parseInt(itemElem.dataset.idx, 10);
+          const selected = results[idx];
+          if (selected) {
+            mapManager.setSearchLocation(
+              selected.lat,
+              selected.lon,
+              selected.name,
+              selected.displayName,
+              selected.countryCode
+            );
+            this.updateReverseGeocodeCard(selected);
+          }
+        });
+      });
+    }, 350);
+
+    input.addEventListener('input', (e) => debouncedSearch(e.target.value));
+
+    // Map layer buttons
+    document.querySelectorAll('.map-layer-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.map-layer-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        mapManager.setLayer(btn.dataset.layer);
+      });
+    });
+  }
+
+  updateReverseGeocodeCard(info) {
+    const card = document.getElementById('reverseGeoInfoCard');
+    if (!card || !info) return;
+
+    card.innerHTML = `
+      <div class="reverse-geo-header"><i class="fa-solid fa-location-dot"></i> Selected Spot</div>
+      <div class="reverse-geo-address">${info.displayName || info.name || 'Map Coordinate'}</div>
+      <div style="font-size: 0.78rem; color: var(--text-muted); font-family: monospace; margin-bottom: 0.5rem;">
+        Lat: ${info.lat.toFixed(5)}, Lon: ${info.lon.toFixed(5)}
+      </div>
+      ${info.countryCode ? `
+        <button class="quick-view-my-country-btn" id="btnReverseOpenCountry" style="margin-top: 0.5rem;">
+          <i class="fa-solid fa-globe"></i> View Country Profile
+        </button>
+      ` : ''}
+    `;
+
+    const btn = document.getElementById('btnReverseOpenCountry');
+    if (btn && info.countryCode) {
+      btn.onclick = () => {
+        const country = countriesService.getCountryByCode(info.countryCode);
+        if (country) countriesView.openDetailModal(country);
+      };
+    }
+  }
+
+  /**
+   * Favorites / Saved Bucket List View
+   */
+  setupFavoritesView() {
+    window.addEventListener('favoritesUpdated', () => {
+      if (this.activeTab === 'saved') {
+        this.renderFavoritesGrid();
+      }
+    });
+
+    const exportBtn = document.getElementById('btnExportFavorites');
+    if (exportBtn) {
+      exportBtn.onclick = () => favoritesManager.exportJSON();
+    }
+  }
+
+  renderFavoritesGrid() {
+    const container = document.getElementById('favoritesGrid');
+    if (!container) return;
+
+    const favorites = favoritesManager.getFavorites();
+
+    if (favorites.length === 0) {
+      container.innerHTML = `
+        <div class="favorites-empty-state" style="grid-column: 1/-1;">
+          <div class="favorites-empty-icon"><i class="fa-regular fa-heart"></i></div>
+          <h3>Your Travel Bucket List is Empty</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.4rem;">
+            Click the heart icon on any country card to save your dream destinations here!
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = favorites.map(fav => {
+      const country = countriesService.getCountryByCode(fav.id);
+      const flag = fav.flag || country?.flags?.svg || '';
+
+      return `
+        <div class="country-card" data-cca3="${fav.id}">
+          <div class="country-card-flag-wrap">
+            <img src="${flag}" alt="${fav.name}" class="country-card-flag" />
+            <span class="country-card-region-badge">${fav.region || 'Saved'}</span>
+          </div>
+          <div class="country-card-body">
+            <h3 class="country-card-title">${fav.name}</h3>
+            <p class="country-card-native">Capital: ${fav.capital || 'N/A'}</p>
+          </div>
+          <div class="country-card-footer">
+            <span>Explore Facts <i class="fa-solid fa-arrow-right"></i></span>
+            <button class="favorite-btn-card active" data-cca3="${fav.id}" title="Remove from bucket list" onclick="event.stopPropagation();">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.country-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const cca3 = card.dataset.cca3;
+        const country = countriesService.getCountryByCode(cca3);
+        if (country) countriesView.openDetailModal(country);
+      });
+    });
+
+    container.querySelectorAll('.favorite-btn-card').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cca3 = btn.dataset.cca3;
+        favoritesManager.removeFavorite(cca3);
+        this.renderFavoritesGrid();
+        countriesView.render();
+        this.showToast('Removed from saved list', 'info');
+      });
+    });
+  }
+
+  showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    let iconClass = 'fa-solid fa-info-circle';
+    if (type === 'success') iconClass = 'fa-solid fa-circle-check';
+    if (type === 'error') iconClass = 'fa-solid fa-triangle-exclamation';
+
+    toast.innerHTML = `<i class="${iconClass}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(100%)';
+      toast.style.transition = 'all 0.3s ease';
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+}
+
+// Bootstrap on DOM Ready
+document.addEventListener('DOMContentLoaded', () => {
+  const app = new GlobalPulseApp();
+  app.init();
+});
