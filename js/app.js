@@ -51,6 +51,17 @@ class GlobalPulseApp {
     // Open shared explorer profile cards (?explorer=<id>)
     passport.checkShareLink();
 
+    // Refresh own radar marker whenever the profile avatar changes
+    window.addEventListener('globalpulse:profileupdated', () => {
+      const g = this.userLocation;
+      if (!g || !mapManager.userMarker) return;
+      mapManager.setUserLocation(
+        g.lat, g.lon,
+        `Your Location: ${g.city}, ${g.country}`,
+        supabaseService.profile?.avatar_url || null
+      );
+    });
+
     // 4. Setup Map & Locate Callbacks
     countriesView.setOnLocate((lat, lon, name) => {
       this.switchTab('map');
@@ -263,7 +274,8 @@ class GlobalPulseApp {
       // Initialize Leaflet Map centered around user location
       mapManager.init('leafletMap', geo.lat, geo.lon);
       this.restoreMapLayer();
-      mapManager.setUserLocation(geo.lat, geo.lon, `Your Location: ${geo.city}, ${geo.country}`);
+      mapManager.setUserLocation(geo.lat, geo.lon, `Your Location: ${geo.city}, ${geo.country}`,
+        supabaseService.profile?.avatar_url || null);
 
       // IP geolocation only resolves to the ISP's registered area (often a
       // regional center), so refine with precise device GPS in the background
@@ -288,7 +300,8 @@ class GlobalPulseApp {
       `;
       geoChip.onclick = () => {
         this.switchTab('map');
-        mapManager.setUserLocation(geo.lat, geo.lon, `${geo.city}, ${geo.country}`);
+        mapManager.setUserLocation(geo.lat, geo.lon, `${geo.city}, ${geo.country}`,
+          supabaseService.profile?.avatar_url || null);
       };
     }
 
@@ -422,7 +435,8 @@ class GlobalPulseApp {
 
       // Move the pulsing marker to the precise position
       if (mapManager.map) {
-        mapManager.setUserLocation(geo.lat, geo.lon, `Your Location: ${geo.city}, ${geo.country}`);
+        mapManager.setUserLocation(geo.lat, geo.lon, `Your Location: ${geo.city}, ${geo.country}`,
+          supabaseService.profile?.avatar_url || null);
       }
     } catch (_) {
       // Fallback seamlessly to accurate IP-based location without spamming console

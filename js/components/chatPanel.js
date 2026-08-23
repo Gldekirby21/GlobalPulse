@@ -399,12 +399,14 @@ class ChatPanel {
         this.updateBadge();
     }
 
-    _messageHtml(m, me) {
+    _messageHtml(m, me, msgId = null) {
         const mine = m.sender_id === me;
+        const id = msgId || m.id || '';
+        const idAttr = id ? `data-msg-id="${id}"` : '';
         return `
-      <div class="chat-msg ${mine ? 'mine' : 'theirs'}">
-        <div class="chat-bubble">${m.body.replace(/</g, '<')}</div>
-        <small>${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+      <div class="chat-msg ${mine ? 'mine' : 'theirs'}" ${idAttr}>
+        <div class="chat-bubble">${m.body.replace(/</g, '&lt;')}</div>
+        <small>${new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
       </div>`;
     }
 
@@ -430,32 +432,56 @@ class ChatPanel {
 
     async send(body) {
         if (!this.activePeer || !supabaseService.user) return;
-        const { error } = await supabaseService.client.from('messages').insert({
-            sender_id: supabaseService.user.id,
+        const me = supabaseService.user.id;
+        const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+        // Optimistic UI append
+        const box = document.getElementById('chatMessages');
+        if (box) {
+            const empty = box.querySelector('.community-empty');
+            if (empty) empty.remove();
+
+            box.insertAdjacentHTML('beforeend', this._messageHtml(
+                { sender_id: me, body, created_at: new Date().toISOString() },
+                me,
+                tempId
+            ));
+            box.scrollTop = box.scrollHeight;
+        }
+
+        const { data, error } = await supabaseService.client.from('messages').insert({
+            sender_id: me,
             recipient_id: this.activePeer.id,
             body
-        });
-        if (error) return console.warn('Send failed:', error.message);
+        }).select().maybeSingle();
 
-        const box = document.getElementById('chatMessages');
-        box.insertAdjacentHTML('beforeend', this._messageHtml(
-            { sender_id: supabaseService.user.id, body, created_at: new Date().toISOString() },
-            supabaseService.user.id
-        ));
-        box.scrollTop = box.scrollHeight;
+        if (error) {
+            console.warn('Send failed:', error.message);
+            const tempEl = document.querySelector(`[data-msg-id="${tempId}"]`);
+            if (tempEl) tempEl.style.opacity = '0.4';
+            return;
+        }
+
+        if (data && data.id) {
+            const tempEl = document.querySelector(`[data-msg-id="${tempId}"]`);
+            if (tempEl) tempEl.setAttribute('data-msg-id', data.id);
+        }
 
         // chatty badge at 10 sent messages
         const { count } = await supabaseService.client
             .from('messages')
             .select('*', { count: 'exact', head: true })
-            .eq('sender_id', supabaseService.user.id);
+            .eq('sender_id', me);
         if (count >= 10) gamificationService.grantBadge('chatty');
     }
 
     /* ------------------------------ Realtime ---------------------------- */
 
     subscribe() {
-        if (this.channel || !supabaseService.configured) return;
+        if (!supabaseService.configured || !supabaseService.user) return;
+        if (this.channel) {
+            this.unsubscribe();
+        }
         this.channel = supabaseService.client
             .channel('globalpulse-chat')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, (payload) => {
@@ -480,8 +506,30 @@ class ChatPanel {
         // Live-append to open thread
         if (this.activePeer && this.activePeer.id === peerId && !this.drawer.hidden) {
             const box = document.getElementById('chatMessages');
-            box?.insertAdjacentHTML('beforeend', this._messageHtml(m, me));
-            box.scrollTop = box.scrollHeight;
+            if (box) {
+                // If message already rendered by id, SKIP!
+                const existing = box.querySelector(`[data-msg-id="${m.id}"]`);
+                if (existing) return;
+
+                // If sent by me, associate with pending optimistic temp bubble
+                if (m.sender_id === me) {
+                    const tempEls = box.querySelectorAll('.chat-msg.mine[data-msg-id^="temp_"]');
+                    for (const el of tempEls) {
+                        const bubble = el.querySelector('.chat-bubble');
+                        if (bubble && bubble.textContent === m.body) {
+                            el.setAttribute('data-msg-id', m.id);
+                            return; // deduplicated successfully
+                        }
+                    }
+                }
+
+                const empty = box.querySelector('.community-empty');
+                if (empty) empty.remove();
+
+                box.insertAdjacentHTML('beforeend', this._messageHtml(m, me, m.id));
+                box.scrollTop = box.scrollHeight;
+            }
+
             if (m.recipient_id === me) {
                 supabaseService.client.from('messages').update({ read: true }).eq('id', m.id);
             }

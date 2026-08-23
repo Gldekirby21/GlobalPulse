@@ -205,9 +205,9 @@ class ProfileManager {
             <div class="prof-section-title"><i class="fa-solid fa-award"></i> Explorer Achievements</div>
             <div class="badge-row">
               ${badges.map(k => {
-                const b = gamificationBadges[k];
-                return b ? `<span class="badge-chip" title="${b.label}"><i class="fa-solid ${b.icon}"></i> ${b.label}</span>` : '';
-              }).join('')}
+      const b = gamificationBadges[k];
+      return b ? `<span class="badge-chip" title="${b.label}"><i class="fa-solid ${b.icon}"></i> ${b.label}</span>` : '';
+    }).join('')}
             </div>
           </div>` : ''}
       </div>
@@ -534,6 +534,11 @@ class ProfileManager {
         auth.renderAuthArea({ user: supabaseService.user, profile: supabaseService.profile });
       }
 
+      // Notify map & other components to refresh the avatar everywhere
+      window.dispatchEvent(new CustomEvent('globalpulse:profileupdated', {
+        detail: { profile: supabaseService.profile }
+      }));
+
       window.globalPulseApp?.showToast?.('Explorer profile updated successfully! ✨', 'success');
 
       // Return to Profile View
@@ -641,9 +646,9 @@ class ProfileManager {
             <div class="prof-section-title"><i class="fa-solid fa-award"></i> Badges Earned</div>
             <div class="badge-row">
               ${badges.map(k => {
-                const b = gamificationBadges[k];
-                return b ? `<span class="badge-chip" title="${b.label}"><i class="fa-solid ${b.icon}"></i> ${b.label}</span>` : '';
-              }).join('')}
+      const b = gamificationBadges[k];
+      return b ? `<span class="badge-chip" title="${b.label}"><i class="fa-solid ${b.icon}"></i> ${b.label}</span>` : '';
+    }).join('')}
             </div>
           </div>` : ''}
       </div>

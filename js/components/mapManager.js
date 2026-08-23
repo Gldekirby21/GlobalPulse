@@ -117,7 +117,7 @@ class MapManager {
   /**
    * Place or update User Location pulsing marker
    */
-  setUserLocation(lat, lon, label = 'Your Detected Location') {
+  setUserLocation(lat, lon, label = 'Your Detected Location', avatarUrl = null) {
     if (!this.map) return;
 
     lat = Number(lat);
@@ -127,12 +127,15 @@ class MapManager {
       return;
     }
 
+    // Radar pulse uses the explorer's profile photo when available
     const pulseIcon = L.divIcon({
       className: 'custom-leaflet-div',
       html: `
         <div class="pulse-user-marker" title="${label}">
           <div class="sonar-wave"></div>
-          <div class="core-dot"></div>
+          <div class="core-dot ${avatarUrl ? 'has-photo' : ''}">
+            ${avatarUrl ? `<img src="${avatarUrl}" alt="" draggable="false" />` : ''}
+          </div>
         </div>
       `,
       iconSize: [24, 24],
@@ -141,6 +144,7 @@ class MapManager {
 
     if (this.userMarker) {
       this.userMarker.setLatLng([lat, lon]);
+      this.userMarker.setIcon(pulseIcon); // refresh photo/label changes too
     } else {
       this.userMarker = L.marker([lat, lon], { icon: pulseIcon }).addTo(this.map);
     }

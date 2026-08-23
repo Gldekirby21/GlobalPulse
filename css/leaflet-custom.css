@@ -51,6 +51,26 @@
   box-shadow: 0 0 10px rgba(6, 182, 212, 0.9);
 }
 
+.pulse-user-marker .core-dot.has-photo {
+  width: 22px;
+  height: 22px;
+  top: 0px;
+  left: 0px;
+  border-width: 2px;
+  border-color: #ffffff;
+  overflow: hidden;
+  background: var(--map-popup-bg);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.85);
+}
+
+.pulse-user-marker .core-dot.has-photo img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
 .pulse-user-marker .sonar-wave {
   width: 100%;
   height: 100%;
