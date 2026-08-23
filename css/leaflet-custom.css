@@ -209,3 +209,55 @@
 .leaflet-control-attribution a {
   color: #06b6d4 !important;
 }
+
+/* Community Explorer Markers (live users) */
+.community-marker {
+  position: relative;
+  width: 28px;
+  height: 28px;
+}
+
+.community-marker .community-avatar {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--avatar, #06b6d4);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  z-index: 2;
+}
+
+.community-marker .community-ping {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--avatar, #06b6d4);
+  opacity: 0.45;
+  z-index: 1;
+  animation: communityPing 2s infinite ease-out;
+}
+
+@keyframes communityPing {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: scale(2.3);
+    opacity: 0;
+  }
+}
+
+.map-popup-distance {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-bottom: 0.5rem;
+}

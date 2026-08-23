@@ -154,7 +154,13 @@ class AuthModal {
 
     friendlyError(err) {
         const msg = err?.message || 'Something went wrong.';
-        if (/invalid login/i.test(msg)) return 'Invalid email or password.';
+        if (/rate limit|too many requests|429/i.test(msg)) {
+            return '⏳ Rate limit: Masyadong mabilis ang sign up attempts. Maghintay muna ng ilang sandali (o i-disable ang "Confirm email" sa Supabase Auth Settings).';
+        }
+        if (/email not confirmed/i.test(msg)) {
+            return '✉️ Hindi pa nakukumpirma ang iyong email. Pakitingnan ang iyong inbox o i-disable ang "Confirm email" sa Supabase Dashboard.';
+        }
+        if (/invalid login|invalid credentials/i.test(msg)) return 'Invalid email or password.';
         if (/already registered/i.test(msg)) return 'That email already has an account — try signing in.';
         if (/at least 6/i.test(msg)) return 'Password must be at least 6 characters.';
         return msg;
