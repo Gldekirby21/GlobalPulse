@@ -255,6 +255,15 @@
   }
 }
 
+.community-marker.teaser {
+  filter: blur(1.5px) grayscale(0.4);
+  opacity: 0.75;
+}
+
+.community-marker.teaser .community-avatar {
+  background: #64748b !important;
+}
+
 .map-popup-distance {
   font-size: 0.78rem;
   font-weight: 700;

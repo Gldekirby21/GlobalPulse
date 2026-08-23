@@ -5,6 +5,7 @@
 
 import { countriesService } from '../services/countriesService.js';
 import { favoritesManager } from './favorites.js';
+import { passport } from './passport.js';
 import { supabaseService } from '../services/supabaseService.js';
 import { authModal } from './authModal.js';
 
@@ -134,7 +135,7 @@ class CountriesView {
           });
           btn.classList.toggle('active', added);
           btn.innerHTML = `<i class="fa-${added ? 'solid' : 'regular'} fa-heart"></i>`;
-          
+
           window.dispatchEvent(new CustomEvent('favoritesUpdated'));
         }
       });
@@ -170,6 +171,9 @@ class CountriesView {
       favBtn.innerHTML = `<i class="fa-${isFav ? 'solid' : 'regular'} fa-heart"></i> ${isFav ? 'Saved in Bucket List' : 'Save to Favorites'}`;
       favBtn.className = isFav ? 'btn-primary' : 'btn-secondary';
     }
+
+    // Travel Passport stamp control
+    passport.renderStampControls(country);
 
     if (detailsContainer) {
       detailsContainer.innerHTML = `

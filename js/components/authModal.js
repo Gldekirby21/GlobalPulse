@@ -278,6 +278,13 @@ class AuthModal {
             class="${supabaseService.precisionMode === 'city' ? 'active' : ''}">City only</button>
         </div>
         <hr />
+        <button class="menu-action-btn" data-passport-action="open">
+          <i class="fa-solid fa-passport"></i> My Travel Passport
+        </button>
+        <button class="menu-action-btn" data-passport-action="copy-profile">
+          <i class="fa-solid fa-share-nodes"></i> Copy Profile Link
+        </button>
+        <hr />
         <button class="menu-signout" data-account-action="signout">
           <i class="fa-solid fa-right-from-bracket"></i> Sign Out
         </button>

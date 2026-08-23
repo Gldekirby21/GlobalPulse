@@ -15,6 +15,9 @@ import { aiGuide } from './components/aiGuide.js';
 import { favoritesManager } from './components/favorites.js';
 import { authModal } from './components/authModal.js';
 import { geoQuiz } from './components/geoQuiz.js';
+import { passport } from './components/passport.js';
+import { chatPanel } from './components/chatPanel.js';
+import { isAuthenticated, bindAuthTriggers } from './utils/access.js';
 
 class GlobalPulseApp {
   constructor() {
@@ -40,6 +43,9 @@ class GlobalPulseApp {
 
     // 4. Setup Community Location Sharing with Supabase
     this.setupCommunitySharing();
+
+    // Open shared explorer profile cards (?explorer=<id>)
+    passport.checkShareLink();
 
     // 4. Setup Map & Locate Callbacks
     countriesView.setOnLocate((lat, lon, name) => {
@@ -270,7 +276,7 @@ class GlobalPulseApp {
 
     // Resolve country data to get authentic currency and official flag
     const countryData = countriesService.getCountryByCode(geo.countryCode) || countriesService.getCountryByName(geo.country);
-    
+
     let displayCurrency = geo.currency;
     if (countryData && countryData.currencies) {
       displayCurrency = countriesService.getCurrenciesString(countryData);
@@ -644,12 +650,15 @@ class GlobalPulseApp {
     // Auth callbacks
     authModal.onAuthStateChanged = (session) => {
       authModal.renderAuthArea(session);
+      chatPanel.setSession(session);
       this.renderFavoritesGrid();
       countriesView.render();
       if (session) {
+        passport.refresh();
         supabaseService.publishLocation();
         supabaseService.startHeartbeat();
       } else {
+        passport.stampedSet.clear();
         supabaseService.stopHeartbeat();
       }
     };
@@ -664,37 +673,65 @@ class GlobalPulseApp {
     // Initialize Supabase session
     supabaseService.init((session) => {
       authModal.renderAuthArea(session);
+      chatPanel.setSession(session);
       this.renderFavoritesGrid();
       countriesView.render();
       if (session) {
+        passport.refresh();
         supabaseService.publishLocation();
         supabaseService.startHeartbeat();
       }
     });
 
+    // Chat / Friends drawer
+    chatPanel.init();
+
     // Realtime Community Location Stream
     supabaseService.subscribeToLocations((users) => {
       this.renderCommunityPanel(users);
-      mapManager.updateCommunityMarkers(users, supabaseService.user?.id, this.userLocation);
+      mapManager.updateCommunityMarkers(users, supabaseService.user?.id, this.userLocation, {
+        teaser: !isAuthenticated()
+      });
     });
   }
 
   renderCommunityPanel(users) {
     const countElem = document.getElementById('communityCount');
     const listElem = document.getElementById('communityList');
-    const emptyElem = document.getElementById('communityEmpty');
 
     if (!listElem) return;
 
-    const list = (users || []).filter(u => u.user_id !== supabaseService.user?.id);
-    if (countElem) countElem.textContent = String(users?.length || 0);
+    const authed = isAuthenticated();
+    const friendIds = new Set(chatPanel.getFriendIds());
+    let list = (users || []).filter(u => u.user_id !== supabaseService.user?.id);
+
+    // Friends tab filter
+    if (authed && chatPanel.communityTab === 'friends') {
+      list = list.filter(u => friendIds.has(u.user_id));
+    }
+
+    if (countElem) countElem.textContent = String(list.length);
+
+    // Guests: curiosity-driving teaser, no personal data
+    if (!authed) {
+      listElem.innerHTML = list.length
+        ? `
+          <p class="community-empty">
+            <i class="fa-solid fa-eye"></i> ${list.length} explorer${list.length === 1 ? '' : 's'} online right now.
+            <button type="button" class="link-btn" data-open-auth>Sign in</button> to connect!
+          </p>`
+        : `<p class="community-empty">Sign in to share your pulse and see explorers on the map.</p>`;
+      bindAuthTriggers(listElem);
+      return;
+    }
 
     if (list.length === 0) {
       listElem.innerHTML = `
         <p class="community-empty">
-          ${supabaseService.user ? 'No other explorers online right now. You are the pioneer!' : 'Sign in to share your pulse and see explorers on the map.'}
-        </p>
-      `;
+          ${chatPanel.communityTab === 'friends'
+          ? 'No friends online right now — add explorers from the map!'
+          : 'No other explorers online right now. You are the pioneer!'}
+        </p>`;
       return;
     }
 
@@ -703,6 +740,7 @@ class GlobalPulseApp {
       const color = u.profiles?.avatar_color || '#06b6d4';
       const initial = name.charAt(0).toUpperCase();
       const place = [u.city, u.country].filter(Boolean).join(', ') || 'Global';
+      const isFriend = friendIds.has(u.user_id);
 
       return `
         <div class="community-user-item" data-lat="${u.lat}" data-lon="${u.lon}" data-name="${name}">
@@ -711,16 +749,23 @@ class GlobalPulseApp {
             <div style="font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name}</div>
             <div style="font-size:0.72rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${place}</div>
           </div>
-          <i class="fa-solid fa-location-arrow" style="font-size:0.75rem; color:var(--accent-cyan);"></i>
+          <button class="community-action-btn" data-chat-user="${u.user_id}" title="Message ${name}">
+            <i class="fa-solid fa-comment-dots"></i>
+          </button>
+          ${!isFriend ? `
+            <button class="community-action-btn" data-addfriend-user="${u.user_id}" title="Add friend">
+              <i class="fa-solid fa-user-plus"></i>
+            </button>` : ''}
+          <i class="fa-solid fa-location-arrow community-fly-btn" style="font-size:0.75rem; color:var(--accent-cyan);"></i>
         </div>
       `;
     }).join('');
 
     listElem.querySelectorAll('.community-user-item').forEach(item => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('[data-chat-user], [data-addfriend-user]')) return;
         const lat = parseFloat(item.dataset.lat);
         const lon = parseFloat(item.dataset.lon);
-        const name = item.dataset.name;
         if (Number.isFinite(lat) && Number.isFinite(lon)) {
           this.switchTab('map');
           mapManager._flyToSafe([lat, lon], 7, 1.5);
