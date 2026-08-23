@@ -21,6 +21,7 @@ import { isAuthenticated, bindAuthTriggers } from './utils/access.js';
 import { weatherService } from './services/weatherService.js';
 import { currencyConverter } from './components/currencyConverter.js';
 import { profileManager } from './components/profileManager.js';
+import { messengerView } from './components/messengerView.js';
 
 class GlobalPulseApp {
   constructor() {
@@ -44,6 +45,8 @@ class GlobalPulseApp {
     countriesView.init();
     aiGuide.init();
     distanceCalc.init();
+    messengerView.init();
+    this.messengerView = messengerView;
 
     // 4. Setup Community Location Sharing with Supabase
     this.setupCommunitySharing();
@@ -733,6 +736,7 @@ class GlobalPulseApp {
     const handleAuthChange = (session) => {
       authModal.renderAuthArea(session);
       chatPanel.setSession(session);
+      messengerView.setSession(session);
       geoQuiz.setSession(session);
       this.renderFavoritesGrid();
       countriesView.render();
@@ -763,6 +767,7 @@ class GlobalPulseApp {
     // Realtime Community Location Stream
     supabaseService.subscribeToLocations((users) => {
       this.renderCommunityPanel(users);
+      document.dispatchEvent(new CustomEvent('globalpulse:communityfeed', { detail: { users } }));
       mapManager.updateCommunityMarkers(users, supabaseService.user?.id, this.userLocation, {
         teaser: !isAuthenticated()
       });

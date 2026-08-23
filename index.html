@@ -92,6 +92,11 @@
           <i class="fa-solid fa-gamepad"></i>
           <span>Quiz Arena</span>
         </button>
+        <button class="nav-tab-btn" data-tab="chat" id="tabBtnChat">
+          <i class="fa-solid fa-comments"></i>
+          <span>Messenger</span>
+          <span class="nav-chat-badge" id="navChatBadge" hidden></span>
+        </button>
         <button class="nav-tab-btn" data-tab="ai" id="tabBtnAI">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
           <span>AI Guide</span>
@@ -431,7 +436,155 @@
       </div>
     </section>
 
-    <!-- TAB 6: SAVED BUCKET LIST -->
+    <!-- TAB 6: MESSENGER (DESKTOP & BROWSER STYLE) -->
+    <section class="view-section" id="view-chat">
+      <!-- Messenger Header Banner -->
+      <div class="view-header-banner">
+        <div class="view-banner-icon"><i class="fa-solid fa-comments"></i></div>
+        <div>
+          <h2>GlobalPulse Messenger</h2>
+          <p>Real-time explorer direct messages, community connections, and live location sharing.</p>
+        </div>
+      </div>
+
+      <!-- 3-Panel Messenger Workspace -->
+      <div class="messenger-container" id="messengerContainer">
+
+        <!-- PANEL 1: Conversations & Explorers Hub (Left Sidebar) -->
+        <aside class="msg-sidebar">
+          <div class="msg-sidebar-header">
+            <div class="msg-search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="msgSearchInput" placeholder="Search conversations & explorers..." autocomplete="off" />
+              <button type="button" class="msg-search-clear" id="msgSearchClear" hidden aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Sub-Tabs: All Chats / Explorers / Requests -->
+            <div class="msg-nav-tabs" role="tablist">
+              <button type="button" class="msg-tab-btn active" data-msg-tab="chats" id="msgTabChats">
+                <i class="fa-solid fa-message"></i>
+                <span>Chats</span>
+                <span class="msg-badge-dot" id="msgChatsBadge" hidden></span>
+              </button>
+              <button type="button" class="msg-tab-btn" data-msg-tab="explorers" id="msgTabExplorers">
+                <i class="fa-solid fa-earth-americas"></i>
+                <span>Explorers</span>
+              </button>
+              <button type="button" class="msg-tab-btn" data-msg-tab="requests" id="msgTabRequests">
+                <i class="fa-solid fa-user-group"></i>
+                <span>Requests</span>
+                <span class="msg-badge-count" id="msgRequestsBadge" hidden>0</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab Content Panes -->
+          <div class="msg-sidebar-content">
+            <!-- 1. All Chats List -->
+            <div class="msg-pane active" id="msgPaneChats">
+              <div class="msg-convo-list" id="msgConvoList">
+                <div class="msg-loading-placeholder">
+                  <div class="pulse-dot"></div>
+                  <span>Loading conversations...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Community Explorers & Friends List -->
+            <div class="msg-pane" id="msgPaneExplorers">
+              <div class="msg-explorers-list" id="msgExplorersList"></div>
+            </div>
+
+            <!-- 3. Friend Requests List -->
+            <div class="msg-pane" id="msgPaneRequests">
+              <div class="msg-requests-list" id="msgRequestsList"></div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- PANEL 2: Active Chat Thread (Center Pane) -->
+        <main class="msg-main-chat" id="msgMainChat">
+          <!-- Empty State (No Chat Selected) -->
+          <div class="msg-empty-state" id="msgEmptyState">
+            <div class="msg-empty-icon"><i class="fa-solid fa-paper-plane"></i></div>
+            <h3>Select an Explorer to Start Chatting</h3>
+            <p>Pick a conversation from the left sidebar, or connect with live explorers from the community map.</p>
+          </div>
+
+          <!-- Active Chat Window (Hidden until conversation opened) -->
+          <div class="msg-thread-layout" id="msgThreadLayout" hidden>
+            <!-- Chat Header -->
+            <header class="msg-thread-header">
+              <button type="button" class="msg-back-btn" id="msgBackBtn" aria-label="Back to conversations">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+              <div class="msg-peer-avatar-wrap" id="msgPeerAvatarWrap"></div>
+              <div class="msg-peer-info">
+                <div class="msg-peer-name-row">
+                  <h3 id="msgPeerName">Explorer</h3>
+                  <span class="msg-peer-style-badge" id="msgPeerStyleBadge" hidden></span>
+                </div>
+                <div class="msg-peer-status" id="msgPeerStatus">
+                  <span class="online-indicator"></span> <span>Active Explorer</span>
+                </div>
+              </div>
+              <div class="msg-thread-actions">
+                <button type="button" class="msg-action-btn" id="msgActionProfile" title="View Explorer Profile">
+                  <i class="fa-solid fa-id-card"></i> <span>Profile</span>
+                </button>
+                <button type="button" class="msg-action-btn" id="msgActionMap" title="Locate on Interactive Map">
+                  <i class="fa-solid fa-map-location-dot"></i> <span>Map</span>
+                </button>
+                <button type="button" class="msg-action-btn" id="msgToggleInfoBtn" title="Toggle Explorer Info Sidebar">
+                  <i class="fa-solid fa-circle-info"></i>
+                </button>
+              </div>
+            </header>
+
+            <!-- Message Stream -->
+            <div class="msg-stream" id="msgStream"></div>
+
+            <!-- Composer Bar -->
+            <footer class="msg-composer-bar">
+              <div class="msg-quick-tools">
+                <button type="button" class="msg-tool-btn" id="msgShareLocationBtn" title="Share your current city / GPS location">
+                  <i class="fa-solid fa-location-dot"></i> <span>Share Location</span>
+                </button>
+                <div class="msg-quick-emojis">
+                  <button type="button" class="msg-emoji-btn" data-emoji="👋">👋</button>
+                  <button type="button" class="msg-emoji-btn" data-emoji="🌍">🌍</button>
+                  <button type="button" class="msg-emoji-btn" data-emoji="✈️">✈️</button>
+                  <button type="button" class="msg-emoji-btn" data-emoji="🔥">🔥</button>
+                  <button type="button" class="msg-emoji-btn" data-emoji="❤️">❤️</button>
+                </div>
+              </div>
+              <form class="msg-input-form" id="msgForm">
+                <input type="text" id="msgInput" placeholder="Type a message... (Press Enter to send)" maxlength="500" autocomplete="off" />
+                <button type="submit" class="msg-send-btn" id="msgSendBtn" aria-label="Send message">
+                  <i class="fa-solid fa-paper-plane"></i>
+                </button>
+              </form>
+            </footer>
+          </div>
+        </main>
+
+        <!-- PANEL 3: Explorer Info / Profile Sidebar (Right Panel) -->
+        <aside class="msg-info-panel" id="msgInfoPanel">
+          <div class="msg-info-header">
+            <h4>Explorer Profile</h4>
+            <button type="button" class="msg-info-close" id="msgInfoClose" aria-label="Close details">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="msg-info-body" id="msgInfoBody">
+            <p class="community-empty">Select a conversation to view explorer details.</p>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- TAB 7: SAVED BUCKET LIST -->
     <section class="view-section" id="view-saved">
       <div
         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
