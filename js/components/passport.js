@@ -194,11 +194,15 @@ class Passport {
     const count = this.stampedSet.size;
     const pct = Math.round((count / TOTAL_COUNTRIES) * 100);
 
+    const avatarHtml = profile.avatar_url
+      ? `<img src="${profile.avatar_url}" alt="${profile.username || 'Explorer'}" class="avatar-photo" style="width:46px; height:46px; border-radius:50%; object-fit:cover; border:2px solid var(--accent-cyan);" />`
+      : `<span class="avatar-dot" style="--avatar:${profile.avatar_color || '#06b6d4'}; width:46px; height:46px; font-size:1.1rem;">
+          ${(profile.username || '?').charAt(0).toUpperCase()}
+        </span>`;
+
     body.innerHTML = `
       <div class="passport-header">
-        <span class="avatar-dot" style="--avatar:${profile.avatar_color || '#06b6d4'}; width:44px; height:44px; font-size:1.1rem;">
-          ${(profile.username || '?').charAt(0).toUpperCase()}
-        </span>
+        ${avatarHtml}
         <div>
           <h3>${profile.username || 'Explorer'}'s Passport</h3>
           <p class="passport-level"><i class="fa-solid fa-bolt"></i> ${lvl.name} • ${profile.xp || 0} XP</p>

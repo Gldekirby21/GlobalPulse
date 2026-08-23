@@ -40,3 +40,42 @@ A state-of-the-art web application that unifies **REST Countries API**, **Nomina
 
 7. **Travel Bucket List & Favorites**
    - Bookmark dream destinations with offline LocalStorage persistence and JSON export.
+
+---
+
+## 👥 Supabase Setup (Community + Engagement Features)
+
+### Hakbang 1: Gumawa ng Supabase Project
+
+1. Pumunta sa [supabase.com](https://supabase.com) at gumawa ng libreng account.
+2. I-click ang **"New Project"** — pumili ng region malapit sa iyo (hal. Singapore).
+
+### Hakbang 2: Patakbuhin ang Database Schemas
+
+1. Sa Supabase Dashboard, buksan ang **SQL Editor → New query**.
+2. Kopyahin at patakbuhin ang [`supabase/schema.sql`](supabase/schema.sql) (community base).
+3. Patakbuhin din ang [`supabase/schema-phase2.sql`](supabase/schema-phase2.sql) (quiz, passport, chat, friends).
+
+### Hakbang 3: I-enable ang Google Sign-In (opsyonal)
+
+1. Sa [Google Cloud Console](https://console.cloud.google.com), gumawa ng **OAuth Client ID** (Web application).
+2. Redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`
+3. Sa Supabase: **Authentication → Providers → Google** → i-paste ang Client ID + Secret.
+4. Sa **Authentication → URL Configuration**, idagdag ang site URL mo (hal. `https://globalpulse-explorer.vercel.app`).
+
+### Hakbang 4: Ilagay ang API Keys
+
+Kopyahin ang **Project URL** at **anon public** key mula sa *Project Settings → API* papunta sa [`js/config.js`](js/config.js).
+
+> 🔒 Ligtas ang anon key sa client — pinoprotektahan ng Row Level Security ang lahat ng data.
+> 🕵️ Ang mga guest ay nakakakita lang ng blurred community teaser; ang logged-in users ay may buong access sa quiz leaderboard, passport stamps, chat at friends.
+
+### Guest vs Logged-in
+
+- **Guest:** lahat ng core features (countries, map, distance, AI guide, weather, converter) + pwedeng maglaro ng Geo Quiz nang local-score lang.
+- **Logged-in:** leaderboard ranking, XP/levels/badges, passport stamps, real-time chat, friends system, at location sharing controls (Exact GPS o City-only precision).
+
+### PWA
+
+Ang `manifest.json` at `sw.js` ay ready na para sa "Install to Home Screen".
+Idagdag ang `<link rel="manifest" href="manifest.json" />` sa `<head>` ng index.html kung nais i-enable.

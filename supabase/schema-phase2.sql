@@ -6,12 +6,19 @@
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
--- 1. GAMIFICATION — XP + badges live on profiles
+-- 1. USER PROFILES & GAMIFICATION — Personal info, XP & badges
 -- ---------------------------------------------------------------------------
 alter table public.profiles
-  add column if not exists xp integer not null default 0;
-
-alter table public.profiles
+  add column if not exists full_name text,
+  add column if not exists bio text,
+  add column if not exists home_country text,
+  add column if not exists home_city text,
+  add column if not exists travel_style text,
+  add column if not exists dream_destination text,
+  add column if not exists website_or_social text,
+  add column if not exists avatar_url text,
+  add column if not exists updated_at timestamptz default now(),
+  add column if not exists xp integer not null default 0,
   add column if not exists badges jsonb not null default '[]'::jsonb;
 
 -- Quiz rounds

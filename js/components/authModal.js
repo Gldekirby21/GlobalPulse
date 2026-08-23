@@ -229,6 +229,15 @@ class AuthModal {
         const initial = name.charAt(0).toUpperCase();
         const email = session.user?.email || '';
         const lvl = gamificationService.levelFor(profile?.xp || 0);
+        const avatarPhoto = profile?.avatar_url;
+
+        const avatarChipHtml = avatarPhoto
+            ? `<img src="${avatarPhoto}" alt="${name}" class="avatar-chip-img" />`
+            : `<span class="avatar-dot" style="--avatar:${color}">${initial}</span>`;
+
+        const avatarMenuHtml = avatarPhoto
+            ? `<img src="${avatarPhoto}" alt="${name}" class="avatar-menu-img" />`
+            : `<span class="avatar-dot" style="--avatar:${color}; width:36px; height:36px; font-size:0.95rem;">${initial}</span>`;
 
         // Hide Sign In button completely when user is logged in
         this.signInBtn.hidden = true;
@@ -239,15 +248,15 @@ class AuthModal {
         this.accountChipWrap.style.display = 'block';
         this.accountChipWrap.innerHTML = `
       <button class="account-chip" id="accountChip" data-account-action="toggle-menu" title="Account Menu">
-        <span class="avatar-dot" style="--avatar:${color}">${initial}</span>
+        ${avatarChipHtml}
         <span class="account-name">${name}</span>
         <i class="fa-solid fa-chevron-down" style="font-size:0.7rem; transition:transform 0.2s ease;"></i>
       </button>
       <div class="account-menu" id="accountMenu">
         <div class="menu-user-header">
-          <span class="avatar-dot" style="--avatar:${color}; width:34px; height:34px; font-size:0.95rem;">${initial}</span>
+          ${avatarMenuHtml}
           <div class="menu-user-details">
-            <div class="menu-user-name">${name}</div>
+            <div class="menu-user-name">${profile?.full_name ? `${profile.full_name} (@${name})` : name}</div>
             <div class="menu-user-email">${email}</div>
             <div class="menu-user-level">
               <span class="level-pill">${lvl.name}</span>
@@ -259,6 +268,19 @@ class AuthModal {
               </div>` : ''}
           </div>
         </div>
+        <hr />
+        <button class="menu-action-btn highlight" data-profile-action="open">
+          <i class="fa-solid fa-id-card"></i> Explorer Profile
+        </button>
+        <button class="menu-action-btn" data-profile-action="edit">
+          <i class="fa-solid fa-user-pen"></i> Edit Profile & Avatar
+        </button>
+        <button class="menu-action-btn" data-passport-action="open">
+          <i class="fa-solid fa-passport"></i> My Travel Passport
+        </button>
+        <button class="menu-action-btn" data-passport-action="copy-profile">
+          <i class="fa-solid fa-share-nodes"></i> Copy Profile Link
+        </button>
         <hr />
         <div class="menu-section-title">
           <i class="fa-solid fa-tower-broadcast"></i> Location Sharing
@@ -277,13 +299,6 @@ class AuthModal {
           <button data-account-action="precision" data-mode="city"
             class="${supabaseService.precisionMode === 'city' ? 'active' : ''}">City only</button>
         </div>
-        <hr />
-        <button class="menu-action-btn" data-passport-action="open">
-          <i class="fa-solid fa-passport"></i> My Travel Passport
-        </button>
-        <button class="menu-action-btn" data-passport-action="copy-profile">
-          <i class="fa-solid fa-share-nodes"></i> Copy Profile Link
-        </button>
         <hr />
         <button class="menu-signout" data-account-action="signout">
           <i class="fa-solid fa-right-from-bracket"></i> Sign Out

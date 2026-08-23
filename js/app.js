@@ -20,6 +20,7 @@ import { chatPanel } from './components/chatPanel.js';
 import { isAuthenticated, bindAuthTriggers } from './utils/access.js';
 import { weatherService } from './services/weatherService.js';
 import { currencyConverter } from './components/currencyConverter.js';
+import { profileManager } from './components/profileManager.js';
 
 class GlobalPulseApp {
   constructor() {

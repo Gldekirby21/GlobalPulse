@@ -270,3 +270,14 @@
   color: var(--accent-cyan);
   margin-bottom: 0.5rem;
 }
+
+/* Guest teaser mode — blurred markers, no personal details */
+.community-marker.teaser {
+  filter: blur(3px) saturate(0.8);
+  cursor: help;
+}
+
+.community-marker.teaser .community-ping {
+  animation: none;
+  opacity: 0.25;
+}
