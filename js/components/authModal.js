@@ -202,8 +202,7 @@ class AuthModal {
 
         const { profile } = session;
         const name = profile?.username || 'Explorer';
-        const color = profile?.avatar_color || '#06b6d4';
-        const initial = name.charAt(0).toUpperCase();
+        const email = session.user?.email || '';
 
         // Hide Sign In button completely when user is logged in
         this.signInBtn.hidden = true;
@@ -213,12 +212,20 @@ class AuthModal {
         this.accountChipWrap.hidden = false;
         this.accountChipWrap.style.display = 'block';
         this.accountChipWrap.innerHTML = `
-      <button class="account-chip" id="accountChip" title="Account">
+      <button class="account-chip" id="accountChip" data-account-action="toggle-menu" title="Account Menu">
         <span class="avatar-dot" style="--avatar:${color}">${initial}</span>
         <span class="account-name">${name}</span>
-        <i class="fa-solid fa-chevron-down"></i>
+        <i class="fa-solid fa-chevron-down" style="font-size:0.7rem; transition:transform 0.2s ease;"></i>
       </button>
       <div class="account-menu" id="accountMenu">
+        <div class="menu-user-header">
+          <span class="avatar-dot" style="--avatar:${color}; width:34px; height:34px; font-size:0.95rem;">${initial}</span>
+          <div class="menu-user-details">
+            <div class="menu-user-name">${name}</div>
+            <div class="menu-user-email">${email}</div>
+          </div>
+        </div>
+        <hr />
         <div class="menu-section-title">
           <i class="fa-solid fa-tower-broadcast"></i> Location Sharing
         </div>
@@ -228,7 +235,7 @@ class AuthModal {
             ${supabaseService.sharingEnabled ? 'checked' : ''} />
         </label>
         <div class="menu-section-title">
-          <i class="fa-solid fa-crosshairs"></i> Precision
+          <i class="fa-solid fa-crosshairs"></i> GPS Precision
         </div>
         <div class="precision-segment">
           <button data-account-action="precision" data-mode="precise"
@@ -245,6 +252,16 @@ class AuthModal {
     }
 
     handleAccountAction(action, el) {
+        if (action === 'toggle-menu') {
+            const menu = document.getElementById('accountMenu');
+            const chip = document.getElementById('accountChip');
+            if (menu) {
+                const isOpen = menu.classList.toggle('open');
+                if (chip) chip.classList.toggle('active', isOpen);
+            }
+            return;
+        }
+
         if (action === 'toggle-sharing') {
             const task = el.checked ? supabaseService.startSharing() : supabaseService.stopSharing();
             task.then(() => this.onSharingChanged?.()).catch(console.warn);
@@ -256,6 +273,11 @@ class AuthModal {
                 .then(() => this.onSharingChanged?.())
                 .catch(console.warn);
             this.renderAuthArea(supabaseService.user ? { user: supabaseService.user, profile: supabaseService.profile } : null);
+            // Re-open menu after re-render so user doesn't lose context
+            setTimeout(() => {
+                document.getElementById('accountMenu')?.classList.add('open');
+                document.getElementById('accountChip')?.classList.add('active');
+            }, 10);
             return;
         }
 
@@ -265,9 +287,6 @@ class AuthModal {
                 .catch((err) => console.warn('Sign out failed:', err.message));
             return;
         }
-
-        // Default: open/close the dropdown menu
-        document.getElementById('accountMenu')?.classList.toggle('open');
     }
 }
 

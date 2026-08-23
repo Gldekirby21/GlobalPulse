@@ -1604,58 +1604,6 @@ img {
   color: var(--accent-cyan);
 }
 
-/* Toast Notifications */
-.toast-container {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  z-index: 3000;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  pointer-events: none;
-}
-
-.toast {
-  pointer-events: auto;
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-glass-strong);
-  padding: 0.85rem 1.25rem;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.88rem;
-  color: var(--text-primary);
-  animation: slideInToast 0.3s ease-out;
-  min-width: 280px;
-}
-
-@keyframes slideInToast {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.toast.success {
-  border-left: 4px solid var(--accent-emerald);
-}
-
-.toast.info {
-  border-left: 4px solid var(--accent-cyan);
-}
-
-.toast.error {
-  border-left: 4px solid var(--accent-rose);
-}
-
 /* Footer */
 .site-footer {
   margin-top: auto;
@@ -1782,6 +1730,7 @@ img {
 
 /* Mobile / Phone Only (<= 768px) */
 @media (max-width: 768px) {
+
   /* Sticky Top Header on Phones */
   .site-header {
     position: sticky !important;
@@ -2115,7 +2064,8 @@ img {
   text-transform: uppercase;
 }
 
-.auth-divider::before, .auth-divider::after {
+.auth-divider::before,
+.auth-divider::after {
   content: '';
   flex: 1;
   border-bottom: 1px solid var(--border-glass);
@@ -2190,12 +2140,16 @@ img {
   white-space: nowrap;
 }
 
-/* Account Dropdown Menu */
+/* Account Dropdown Menu Popup */
+.account-chip.active i {
+  transform: rotate(180deg);
+}
+
 .account-menu {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 240px;
+  width: 260px;
   background: var(--bg-surface);
   border: 1px solid var(--border-glass-strong);
   border-radius: var(--radius-md);
@@ -2208,6 +2162,35 @@ img {
 
 .account-menu.open {
   display: block;
+}
+
+.menu-user-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding-bottom: 0.25rem;
+}
+
+.menu-user-details {
+  flex: 1;
+  overflow: hidden;
+}
+
+.menu-user-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-user-email {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .menu-section-title {
