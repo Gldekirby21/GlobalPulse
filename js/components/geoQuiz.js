@@ -121,17 +121,28 @@ class GeoQuiz {
         let authStatusHtml = '';
         if (authed) {
             const avatarHtml = prof.avatar_url
-                ? `<img src="${prof.avatar_url}" alt="${prof.username}" class="quiz-player-avatar" />`
-                : `<span class="avatar-dot" style="--avatar:${prof.avatar_color || '#06b6d4'}; width:34px; height:34px; font-size:0.9rem;">
+                ? `<img src="${prof.avatar_url}" alt="${prof.username || 'Explorer'}" class="quiz-player-avatar" />`
+                : `<span class="avatar-dot quiz-player-avatar" style="--avatar:${prof.avatar_color || '#06b6d4'};">
                     ${(prof.username || '?').charAt(0).toUpperCase()}
                    </span>`;
 
             authStatusHtml = `
-              <div class="quiz-player-badge">
-                ${avatarHtml}
-                <div class="quiz-player-info">
-                  <span class="quiz-player-name">Playing as <strong>${prof.full_name || prof.username || 'Explorer'}</strong></span>
-                  <small class="quiz-player-xp"><i class="fa-solid fa-bolt" style="color:var(--accent-amber);"></i> ${prof.xp || 0} XP &bull; Leaderboard Sync Active ✓</small>
+              <div class="quiz-player-card">
+                <div class="quiz-player-avatar-wrap">
+                  ${avatarHtml}
+                </div>
+                <div class="quiz-player-meta">
+                  <div class="quiz-player-greeting">
+                    Playing as <strong class="quiz-player-name">${prof.full_name || prof.username || 'Explorer'}</strong>
+                  </div>
+                  <div class="quiz-player-status-chips">
+                    <span class="quiz-status-chip xp-chip" title="Total XP Earned">
+                      <i class="fa-solid fa-bolt"></i> <strong>${prof.xp || 0} XP</strong>
+                    </span>
+                    <span class="quiz-status-chip sync-chip" title="Live Global Leaderboard Tracking Active">
+                      <i class="fa-solid fa-circle-check"></i> Leaderboard Active
+                    </span>
+                  </div>
                 </div>
               </div>`;
         } else {
