@@ -1,5 +1,10 @@
 # 🌍 GlobalPulse: Interactive Country & Location Explorer
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://global-pulse-lemon-two.vercel.app/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Gldekirby21/GlobalPulse)
+
+> 🚀 **Live Website:** [GlobalPulse — Interactive Country & Location Explorer](https://global-pulse-lemon-two.vercel.app/)
+
 A state-of-the-art web application that unifies **REST Countries API**, **Nominatim OpenStreetMap Geocoding**, and **HTTPS IP Geolocation** into a fast, interactive geospatial dashboard with **Leaflet.js**, **Country Comparisons**, **Great-Circle Distance Measurement**, and an **AI Travel & Geo Assistant**.
 
 ---
