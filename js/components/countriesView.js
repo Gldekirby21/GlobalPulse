@@ -20,7 +20,7 @@ class CountriesView {
     this.onLocateCountryOnMap = null;
   }
 
-  init(containerId = 'countriesGrid', modalId = 'countryDetailModal') {
+  init(containerId = 'countriesGrid', modalId = 'view-country') {
     this.container = document.getElementById(containerId);
     this.modal = document.getElementById(modalId);
     this.setupModalListeners();
@@ -262,25 +262,20 @@ class CountriesView {
       speakBtn.onclick = () => this.speakCountryFacts(country);
     }
 
-    // Show modal
-    this.modal.classList.add('open');
+    // Show as a full page: remember where to return, then navigate
+    this._returnTab = window.globalPulseApp?.activeTab || 'explore';
+    window.globalPulseApp?.switchTab('country');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   closeModal() {
-    if (this.modal) {
-      this.modal.classList.remove('open');
-    }
+    const back = this._returnTab || 'explore';
+    window.globalPulseApp?.switchTab(back);
   }
 
   setupModalListeners() {
     const closeBtn = document.getElementById('modalCloseBtn');
     if (closeBtn) closeBtn.onclick = () => this.closeModal();
-
-    if (this.modal) {
-      this.modal.addEventListener('click', (e) => {
-        if (e.target === this.modal) this.closeModal();
-      });
-    }
 
     const favBtn = document.getElementById('modalFavBtn');
     if (favBtn) {

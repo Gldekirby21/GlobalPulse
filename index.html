@@ -76,6 +76,10 @@
           <i class="fa-solid fa-globe"></i>
           <span>Explore</span>
         </button>
+        <button class="nav-tab-btn" data-tab="feed" id="tabBtnFeed">
+          <i class="fa-solid fa-newspaper"></i>
+          <span>Feed</span>
+        </button>
         <button class="nav-tab-btn" data-tab="map" id="tabBtnMap">
           <i class="fa-solid fa-map-location-dot"></i>
           <span>Map & Geocode</span>
@@ -91,11 +95,6 @@
         <button class="nav-tab-btn" data-tab="quiz" id="tabBtnQuiz">
           <i class="fa-solid fa-gamepad"></i>
           <span>Quiz Arena</span>
-        </button>
-        <button class="nav-tab-btn" data-tab="chat" id="tabBtnChat">
-          <i class="fa-solid fa-comments"></i>
-          <span>Messenger</span>
-          <span class="nav-chat-badge" id="navChatBadge" hidden></span>
         </button>
         <button class="nav-tab-btn" data-tab="ai" id="tabBtnAI">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -223,7 +222,113 @@
       </div>
     </section>
 
-    <!-- TAB 2: INTERACTIVE MAP & NOMINATIM GEOCODER -->
+    <!-- TAB 2: TRAVEL SOCIAL FEED ("PULSE FEED") -->
+    <section class="view-section" id="view-feed">
+      <!-- 24-Hour Stories Carousel -->
+      <div class="pulse-stories-bar" id="pulseStoriesBar"></div>
+
+      <!-- Feed Grid Layout -->
+      <div class="feed-layout">
+        <!-- Main Column: Composer & Stream -->
+        <main class="feed-main-col">
+          <!-- Post Composer -->
+          <div class="feed-composer" id="feedComposer">
+            <div class="composer-top">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Your Avatar" class="composer-avatar" id="composerUserAvatar" />
+              <div class="composer-input-wrap">
+                <textarea id="composerTextarea" class="composer-textarea" placeholder="What's on your travel mind? Share stories, tips, or check-ins..."></textarea>
+                <div class="composer-tags-preview" id="composerTagsPreview"></div>
+                <div class="composer-photo-preview-wrap" id="composerPhotoPreviewWrap" hidden>
+                  <img src="" alt="Preview" class="composer-photo-preview" id="composerPhotoPreview" />
+                  <button type="button" class="composer-remove-photo-btn" id="composerRemovePhotoBtn" aria-label="Remove photo"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+              </div>
+            </div>
+            <div class="composer-bottom">
+              <div class="composer-quick-actions">
+                <input type="file" id="composerPhotoInput" accept="image/*" style="display:none;" />
+                <button type="button" class="composer-tool-btn" id="composerPhotoBtn">
+                  <i class="fa-solid fa-image" style="color:var(--accent-emerald);"></i> <span>Photo</span>
+                </button>
+                <button type="button" class="composer-tool-btn" id="composerCheckinBtn">
+                  <i class="fa-solid fa-location-dot" style="color:var(--accent-rose);"></i> <span>Check In</span>
+                </button>
+                <button type="button" class="composer-tool-btn" id="composerFeelingBtn">
+                  <i class="fa-solid fa-face-smile" style="color:var(--accent-amber);"></i> <span>Feeling</span>
+                </button>
+              </div>
+              <button type="button" class="composer-submit-btn" id="composerSubmitBtn">
+                <i class="fa-solid fa-paper-plane"></i> <span>Post</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Feed Filter Bar -->
+          <div class="feed-filter-bar">
+            <button type="button" class="feed-filter-btn active" data-feed-filter="all">
+              <i class="fa-solid fa-globe"></i> <span>All Stories</span>
+            </button>
+            <button type="button" class="feed-filter-btn" data-feed-filter="friends">
+              <i class="fa-solid fa-user-group"></i> <span>Friends Only</span>
+            </button>
+            <button type="button" class="feed-filter-btn" data-feed-filter="mine">
+              <i class="fa-solid fa-user"></i> <span>My Posts</span>
+            </button>
+          </div>
+
+          <!-- Dynamic Feed Stream -->
+          <div class="feed-stream" id="feedStream"></div>
+        </main>
+
+        <!-- Right Column: Sidebar Widgets -->
+        <aside class="feed-side-col">
+          <!-- Suggested Explorers -->
+          <div class="feed-widget-card">
+            <div class="widget-header">
+              <h4><i class="fa-solid fa-user-plus" style="color:var(--accent-cyan);"></i> Suggested Explorers</h4>
+            </div>
+            <div class="suggested-explorers-list" id="suggestedExplorersList">
+              <div class="suggested-user-row">
+                <span class="avatar-dot" style="--avatar:#06b6d4; width:34px; height:34px; font-size:0.8rem;">A</span>
+                <div class="suggested-user-info">
+                  <strong>Aoi Tanaka</strong>
+                  <small>Tokyo, Japan &bull; 850 XP</small>
+                </div>
+              </div>
+              <div class="suggested-user-row">
+                <span class="avatar-dot" style="--avatar:#ec4899; width:34px; height:34px; font-size:0.8rem;">M</span>
+                <div class="suggested-user-info">
+                  <strong>Marco Rivera</strong>
+                  <small>Manila, Philippines &bull; 620 XP</small>
+                </div>
+              </div>
+              <div class="suggested-user-row">
+                <span class="avatar-dot" style="--avatar:#8b5cf6; width:34px; height:34px; font-size:0.8rem;">E</span>
+                <div class="suggested-user-info">
+                  <strong>Elena Rostova</strong>
+                  <small>Paris, France &bull; 1.2k XP</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trending Travel Topics -->
+          <div class="feed-widget-card">
+            <div class="widget-header">
+              <h4><i class="fa-solid fa-fire" style="color:var(--accent-rose);"></i> Trending Destinations</h4>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.82rem;">
+              <div><strong style="color:var(--accent-cyan);">#JapanSpring2026</strong> <span style="color:var(--text-muted);">&bull; 42 posts</span></div>
+              <div><strong style="color:var(--accent-cyan);">#BoracaySunsets</strong> <span style="color:var(--text-muted);">&bull; 29 posts</span></div>
+              <div><strong style="color:var(--accent-cyan);">#SwissAlpsHike</strong> <span style="color:var(--text-muted);">&bull; 18 posts</span></div>
+              <div><strong style="color:var(--accent-cyan);">#BangkokStreetFood</strong> <span style="color:var(--text-muted);">&bull; 15 posts</span></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- TAB 3: INTERACTIVE MAP & NOMINATIM GEOCODER -->
     <section class="view-section" id="view-map">
       <div class="map-layout">
         <!-- Sidebar Search & Reverse Geocode Results -->
@@ -415,7 +520,8 @@
     <section class="view-section" id="view-quiz">
       <div style="margin-bottom: 1.5rem;">
         <h2><i class="fa-solid fa-gamepad" style="color: var(--accent-cyan);"></i> Geo Quiz Arena</h2>
-        <p style="color: var(--text-secondary); font-size: 0.9rem;">Test your world geography knowledge, challenge the global leaderboard, and earn XP badges!</p>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">Test your world geography knowledge, challenge the
+          global leaderboard, and earn XP badges!</p>
       </div>
 
       <div class="quiz-layout">
@@ -436,155 +542,7 @@
       </div>
     </section>
 
-    <!-- TAB 6: MESSENGER (DESKTOP & BROWSER STYLE) -->
-    <section class="view-section" id="view-chat">
-      <!-- Messenger Header Banner -->
-      <div class="view-header-banner">
-        <div class="view-banner-icon"><i class="fa-solid fa-comments"></i></div>
-        <div>
-          <h2>GlobalPulse Messenger</h2>
-          <p>Real-time explorer direct messages, community connections, and live location sharing.</p>
-        </div>
-      </div>
-
-      <!-- 3-Panel Messenger Workspace -->
-      <div class="messenger-container" id="messengerContainer">
-
-        <!-- PANEL 1: Conversations & Explorers Hub (Left Sidebar) -->
-        <aside class="msg-sidebar">
-          <div class="msg-sidebar-header">
-            <div class="msg-search-box">
-              <i class="fa-solid fa-magnifying-glass"></i>
-              <input type="text" id="msgSearchInput" placeholder="Search conversations & explorers..." autocomplete="off" />
-              <button type="button" class="msg-search-clear" id="msgSearchClear" hidden aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <!-- Sub-Tabs: All Chats / Explorers / Requests -->
-            <div class="msg-nav-tabs" role="tablist">
-              <button type="button" class="msg-tab-btn active" data-msg-tab="chats" id="msgTabChats">
-                <i class="fa-solid fa-message"></i>
-                <span>Chats</span>
-                <span class="msg-badge-dot" id="msgChatsBadge" hidden></span>
-              </button>
-              <button type="button" class="msg-tab-btn" data-msg-tab="explorers" id="msgTabExplorers">
-                <i class="fa-solid fa-earth-americas"></i>
-                <span>Explorers</span>
-              </button>
-              <button type="button" class="msg-tab-btn" data-msg-tab="requests" id="msgTabRequests">
-                <i class="fa-solid fa-user-group"></i>
-                <span>Requests</span>
-                <span class="msg-badge-count" id="msgRequestsBadge" hidden>0</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Tab Content Panes -->
-          <div class="msg-sidebar-content">
-            <!-- 1. All Chats List -->
-            <div class="msg-pane active" id="msgPaneChats">
-              <div class="msg-convo-list" id="msgConvoList">
-                <div class="msg-loading-placeholder">
-                  <div class="pulse-dot"></div>
-                  <span>Loading conversations...</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 2. Community Explorers & Friends List -->
-            <div class="msg-pane" id="msgPaneExplorers">
-              <div class="msg-explorers-list" id="msgExplorersList"></div>
-            </div>
-
-            <!-- 3. Friend Requests List -->
-            <div class="msg-pane" id="msgPaneRequests">
-              <div class="msg-requests-list" id="msgRequestsList"></div>
-            </div>
-          </div>
-        </aside>
-
-        <!-- PANEL 2: Active Chat Thread (Center Pane) -->
-        <main class="msg-main-chat" id="msgMainChat">
-          <!-- Empty State (No Chat Selected) -->
-          <div class="msg-empty-state" id="msgEmptyState">
-            <div class="msg-empty-icon"><i class="fa-solid fa-paper-plane"></i></div>
-            <h3>Select an Explorer to Start Chatting</h3>
-            <p>Pick a conversation from the left sidebar, or connect with live explorers from the community map.</p>
-          </div>
-
-          <!-- Active Chat Window (Hidden until conversation opened) -->
-          <div class="msg-thread-layout" id="msgThreadLayout" hidden>
-            <!-- Chat Header -->
-            <header class="msg-thread-header">
-              <button type="button" class="msg-back-btn" id="msgBackBtn" aria-label="Back to conversations">
-                <i class="fa-solid fa-arrow-left"></i>
-              </button>
-              <div class="msg-peer-avatar-wrap" id="msgPeerAvatarWrap"></div>
-              <div class="msg-peer-info">
-                <div class="msg-peer-name-row">
-                  <h3 id="msgPeerName">Explorer</h3>
-                  <span class="msg-peer-style-badge" id="msgPeerStyleBadge" hidden></span>
-                </div>
-                <div class="msg-peer-status" id="msgPeerStatus">
-                  <span class="online-indicator"></span> <span>Active Explorer</span>
-                </div>
-              </div>
-              <div class="msg-thread-actions">
-                <button type="button" class="msg-action-btn" id="msgActionProfile" title="View Explorer Profile">
-                  <i class="fa-solid fa-id-card"></i> <span>Profile</span>
-                </button>
-                <button type="button" class="msg-action-btn" id="msgActionMap" title="Locate on Interactive Map">
-                  <i class="fa-solid fa-map-location-dot"></i> <span>Map</span>
-                </button>
-                <button type="button" class="msg-action-btn" id="msgToggleInfoBtn" title="Toggle Explorer Info Sidebar">
-                  <i class="fa-solid fa-circle-info"></i>
-                </button>
-              </div>
-            </header>
-
-            <!-- Message Stream -->
-            <div class="msg-stream" id="msgStream"></div>
-
-            <!-- Composer Bar -->
-            <footer class="msg-composer-bar">
-              <div class="msg-quick-tools">
-                <button type="button" class="msg-tool-btn" id="msgShareLocationBtn" title="Share your current city / GPS location">
-                  <i class="fa-solid fa-location-dot"></i> <span>Share Location</span>
-                </button>
-                <div class="msg-quick-emojis">
-                  <button type="button" class="msg-emoji-btn" data-emoji="👋">👋</button>
-                  <button type="button" class="msg-emoji-btn" data-emoji="🌍">🌍</button>
-                  <button type="button" class="msg-emoji-btn" data-emoji="✈️">✈️</button>
-                  <button type="button" class="msg-emoji-btn" data-emoji="🔥">🔥</button>
-                  <button type="button" class="msg-emoji-btn" data-emoji="❤️">❤️</button>
-                </div>
-              </div>
-              <form class="msg-input-form" id="msgForm">
-                <input type="text" id="msgInput" placeholder="Type a message... (Press Enter to send)" maxlength="500" autocomplete="off" />
-                <button type="submit" class="msg-send-btn" id="msgSendBtn" aria-label="Send message">
-                  <i class="fa-solid fa-paper-plane"></i>
-                </button>
-              </form>
-            </footer>
-          </div>
-        </main>
-
-        <!-- PANEL 3: Explorer Info / Profile Sidebar (Right Panel) -->
-        <aside class="msg-info-panel" id="msgInfoPanel">
-          <div class="msg-info-header">
-            <h4>Explorer Profile</h4>
-            <button type="button" class="msg-info-close" id="msgInfoClose" aria-label="Close details">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-          <div class="msg-info-body" id="msgInfoBody">
-            <p class="community-empty">Select a conversation to view explorer details.</p>
-          </div>
-        </aside>
-
-      </div>
-    </section>
-
-    <!-- TAB 7: SAVED BUCKET LIST -->
+    <!-- TAB 6: SAVED BUCKET LIST -->
     <section class="view-section" id="view-saved">
       <div
         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
@@ -601,52 +559,53 @@
       <div class="countries-grid" id="favoritesGrid"></div>
     </section>
 
-  </main>
-
-  <!-- Country Detail Modal Dialog -->
-  <div class="modal-backdrop" id="countryDetailModal" role="dialog" aria-modal="true">
-    <div class="modal-container">
-      <!-- Modal Hero Header -->
-      <div class="modal-header-hero">
-        <img id="modalFlagBg" class="modal-flag-bg" src="" alt="Flag Backdrop" />
-        <button class="modal-close-btn" id="modalCloseBtn" aria-label="Close dialog">
-          <i class="fa-solid fa-xmark"></i>
+    <!-- COUNTRY DETAIL PAGE (full-page view with back button) -->
+    <section class="view-section country-page" id="view-country">
+      <div class="country-page-container">
+        <button class="country-back-btn" id="modalCloseBtn" aria-label="Go back">
+          <i class="fa-solid fa-arrow-left"></i> <span>Back</span>
         </button>
-        <div class="modal-hero-content">
-          <img id="modalFlagThumb" class="modal-flag-thumb" src="" alt="Flag Thumbnail" />
-          <div>
-            <h2 class="modal-country-name" id="modalCountryName">Country Name</h2>
-            <p class="modal-official-name" id="modalOfficialName">Official State Name</p>
+
+        <!-- Hero Header -->
+        <div class="country-hero">
+          <img id="modalFlagBg" class="modal-flag-bg" src="" alt="Flag Backdrop" />
+          <div class="modal-hero-content">
+            <img id="modalFlagThumb" class="modal-flag-thumb" src="" alt="Flag Thumbnail" />
+            <div>
+              <h2 class="modal-country-name" id="modalCountryName">Country Name</h2>
+              <p class="modal-official-name" id="modalOfficialName">Official State Name</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="country-body">
+          <!-- Quick Details Grid -->
+          <div class="detail-grid" id="modalDetailsGrid"></div>
+
+          <!-- Border Countries Navigation -->
+          <div class="border-countries-wrap">
+            <div class="detail-label"><i class="fa-solid fa-border-all"></i> Shared Land Border Countries</div>
+            <div class="border-chips-list" id="modalBordersList"></div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="modal-actions">
+            <button class="btn-primary" id="modalViewOnMapBtn">
+              <i class="fa-solid fa-map-location-dot"></i> View on Interactive Map
+            </button>
+            <button class="btn-secondary" id="modalSpeakBtn">
+              <i class="fa-solid fa-volume-high"></i> Pronounce & Listen
+            </button>
+            <button class="btn-secondary" id="modalFavBtn">
+              <i class="fa-regular fa-heart"></i> Save to Favorites
+            </button>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- Modal Body -->
-      <div class="modal-body">
-        <!-- Quick Details Grid -->
-        <div class="detail-grid" id="modalDetailsGrid"></div>
-
-        <!-- Border Countries Navigation -->
-        <div class="border-countries-wrap">
-          <div class="detail-label"><i class="fa-solid fa-border-all"></i> Shared Land Border Countries</div>
-          <div class="border-chips-list" id="modalBordersList"></div>
-        </div>
-
-        <!-- Modal Action Buttons -->
-        <div class="modal-actions">
-          <button class="btn-primary" id="modalViewOnMapBtn">
-            <i class="fa-solid fa-map-location-dot"></i> View on Interactive Map
-          </button>
-          <button class="btn-secondary" id="modalSpeakBtn">
-            <i class="fa-solid fa-volume-high"></i> Pronounce & Listen
-          </button>
-          <button class="btn-secondary" id="modalFavBtn">
-            <i class="fa-regular fa-heart"></i> Save to Favorites
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+  </main>
 
   <!-- Site Footer -->
   <footer class="site-footer">

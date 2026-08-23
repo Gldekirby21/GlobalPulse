@@ -164,6 +164,7 @@ class ChatPanel {
     close() {
         if (!this.drawer) return;
         this.drawer.classList.remove('open');
+        this.drawer.classList.remove('thread-open');
         setTimeout(() => { this.drawer.hidden = true; }, 300);
         this.activePeer = null;
     }
@@ -386,7 +387,7 @@ class ChatPanel {
         const box = document.getElementById('chatMessages');
         box.innerHTML = (msgs || []).map((m) => this._messageHtml(m, me)).join('') ||
             '<p class="community-empty">Say hello 👋</p>';
-        box.scrollTop = box.scrollHeight;
+        this.scrollToBottom(false);
 
         // Mark incoming as read
         await supabaseService.client
@@ -397,6 +398,17 @@ class ChatPanel {
             .eq('read', false);
         this.unreadByPeer.delete(userId);
         this.updateBadge();
+    }
+
+    scrollToBottom(smooth = true) {
+        const box = document.getElementById('chatMessages');
+        if (!box) return;
+        requestAnimationFrame(() => {
+            box.scrollTo({
+                top: box.scrollHeight,
+                behavior: smooth ? 'smooth' : 'auto'
+            });
+        });
     }
 
     _messageHtml(m, me, msgId = null) {
@@ -412,6 +424,7 @@ class ChatPanel {
 
     showList() {
         this.activePeer = null;
+        this.drawer?.classList.remove('thread-open');
         document.getElementById('chatThread').hidden = true;
         document.getElementById('chatConversations').style.display = 'block';
         this.renderConversationList();
@@ -420,6 +433,7 @@ class ChatPanel {
 
     showThread() {
         const peer = this.activePeer;
+        this.drawer?.classList.add('thread-open');
         document.getElementById('chatThreadPeer').innerHTML = `
       <span class="avatar-dot" style="--avatar:${peer.avatar_color || '#06b6d4'}; width:26px; height:26px; font-size:0.7rem;">
         ${(peer.username || '?').charAt(0).toUpperCase()}
@@ -427,6 +441,7 @@ class ChatPanel {
       <strong>${peer.username || 'Explorer'}</strong>`;
         document.getElementById('chatConversations').style.display = 'none';
         document.getElementById('chatThread').hidden = false;
+        this.scrollToBottom(false);
         setTimeout(() => document.getElementById('chatInput')?.focus(), 100);
     }
 
@@ -446,7 +461,7 @@ class ChatPanel {
                 me,
                 tempId
             ));
-            box.scrollTop = box.scrollHeight;
+            this.scrollToBottom(true);
         }
 
         const { data, error } = await supabaseService.client.from('messages').insert({
@@ -527,7 +542,7 @@ class ChatPanel {
                 if (empty) empty.remove();
 
                 box.insertAdjacentHTML('beforeend', this._messageHtml(m, me, m.id));
-                box.scrollTop = box.scrollHeight;
+                this.scrollToBottom(true);
             }
 
             if (m.recipient_id === me) {

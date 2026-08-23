@@ -17,11 +17,12 @@ import { authModal } from './components/authModal.js';
 import { geoQuiz } from './components/geoQuiz.js';
 import { passport } from './components/passport.js';
 import { chatPanel } from './components/chatPanel.js';
-import { isAuthenticated, bindAuthTriggers } from './utils/access.js';
 import { weatherService } from './services/weatherService.js';
 import { currencyConverter } from './components/currencyConverter.js';
 import { profileManager } from './components/profileManager.js';
-import { messengerView } from './components/messengerView.js';
+import { socialFeed } from './components/socialFeed.js';
+import { pulseStories } from './components/pulseStories.js';
+import { notificationCenter } from './components/notificationCenter.js';
 
 class GlobalPulseApp {
   constructor() {
@@ -45,8 +46,9 @@ class GlobalPulseApp {
     countriesView.init();
     aiGuide.init();
     distanceCalc.init();
-    messengerView.init();
-    this.messengerView = messengerView;
+    socialFeed.init();
+    pulseStories.init();
+    notificationCenter.init();
 
     // 4. Setup Community Location Sharing with Supabase
     this.setupCommunitySharing();
@@ -54,15 +56,20 @@ class GlobalPulseApp {
     // Open shared explorer profile cards (?explorer=<id>)
     passport.checkShareLink();
 
-    // Refresh own radar marker whenever the profile avatar changes
+    // Refresh own radar marker & composer avatar whenever the profile changes
     window.addEventListener('globalpulse:profileupdated', () => {
       const g = this.userLocation;
-      if (!g || !mapManager.userMarker) return;
-      mapManager.setUserLocation(
-        g.lat, g.lon,
-        `Your Location: ${g.city}, ${g.country}`,
-        supabaseService.profile?.avatar_url || null
-      );
+      if (g && mapManager.userMarker) {
+        mapManager.setUserLocation(
+          g.lat, g.lon,
+          `Your Location: ${g.city}, ${g.country}`,
+          supabaseService.profile?.avatar_url || null
+        );
+      }
+      const compAvatar = document.getElementById('composerUserAvatar');
+      if (compAvatar && supabaseService.profile?.avatar_url) {
+        compAvatar.src = supabaseService.profile.avatar_url;
+      }
     });
 
     // 4. Setup Map & Locate Callbacks
@@ -209,11 +216,13 @@ class GlobalPulseApp {
       history.replaceState(null, '', '#' + tabId);
     }
 
-    // Update Nav Buttons
-    document.querySelectorAll('[data-tab]').forEach(btn => {
-      const isTarget = btn.dataset.tab === tabId;
-      btn.classList.toggle('active', isTarget);
-    });
+    // Update Nav Buttons (country page keeps the originating tab highlighted)
+    if (tabId !== 'country') {
+      document.querySelectorAll('[data-tab]').forEach(btn => {
+        const isTarget = btn.dataset.tab === tabId;
+        btn.classList.toggle('active', isTarget);
+      });
+    }
 
     // Update Sections
     document.querySelectorAll('.view-section').forEach(sec => {
@@ -552,7 +561,8 @@ class GlobalPulseApp {
   restoreLastTab() {
     let last = null;
     try { last = localStorage.getItem('globalpulse_tab'); } catch (e) { /* blocked */ }
-    if (last && last !== 'explore' && document.getElementById(`view-${last}`)) {
+    // Never auto-restore the country detail page — it needs a selected country
+    if (last && last !== 'explore' && last !== 'country' && document.getElementById(`view-${last}`)) {
       this.switchTab(last);
     }
   }
@@ -736,8 +746,10 @@ class GlobalPulseApp {
     const handleAuthChange = (session) => {
       authModal.renderAuthArea(session);
       chatPanel.setSession(session);
-      messengerView.setSession(session);
       geoQuiz.setSession(session);
+      socialFeed.loadPosts();
+      pulseStories.loadStories();
+      notificationCenter.loadNotifications();
       this.renderFavoritesGrid();
       countriesView.render();
       if (session) {

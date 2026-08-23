@@ -30,6 +30,7 @@ class ProfileManager {
     this.modal = null;
     this.activeTab = 'view'; // 'view' | 'edit'
     this.pendingAvatarUrl = null;
+    this.pendingCoverUrl = null;
     this.pendingAvatarColor = null;
     this._bindGlobalEvents();
   }
@@ -143,7 +144,10 @@ class ProfileManager {
     body.innerHTML = `
       <div class="profile-view-wrap">
         <!-- Top Profile Cover Card -->
-        <div class="profile-header-banner">
+        <div class="profile-cover-wrap" style="height:125px; border-radius:var(--radius-md) var(--radius-md) 0 0; position:relative; overflow:hidden; background:linear-gradient(135deg, #0ea5e9, #6366f1); margin-bottom:-35px;">
+          ${prof.cover_url ? `<img src="${prof.cover_url}" alt="Cover" style="width:100%; height:100%; object-fit:cover;" />` : ''}
+        </div>
+        <div class="profile-header-banner" style="position:relative; z-index:2;">
           <div class="profile-avatar-container">
             ${avatarHtml}
           </div>
@@ -272,6 +276,12 @@ class ProfileManager {
 
         <!-- Form Inputs Grid -->
         <div class="profile-form-grid">
+          <div class="form-group full-width">
+            <label for="profCoverUrl"><i class="fa-solid fa-panorama"></i> Cover Banner Image URL</label>
+            <input type="text" id="profCoverUrl" class="profile-input" maxlength="255"
+              placeholder="e.g. https://images.unsplash.com/... or direct image link" value="${this._escapeHtml(prof.cover_url || '')}" />
+          </div>
+
           <div class="form-group">
             <label for="profFullName"><i class="fa-solid fa-user"></i> Full / Display Name</label>
             <input type="text" id="profFullName" class="profile-input" maxlength="40"
@@ -483,6 +493,8 @@ class ProfileManager {
     const errorBox = document.getElementById('profileEditError');
     const saveBtn = document.getElementById('btnSaveProfile');
 
+    const coverUrl = document.getElementById('profCoverUrl')?.value.trim();
+
     if (!username) {
       if (errorBox) {
         errorBox.textContent = 'Username is required.';
@@ -506,6 +518,7 @@ class ProfileManager {
         travel_style: travelStyle || null,
         dream_destination: dreamDest || null,
         website_or_social: social || null,
+        cover_url: coverUrl || null,
         avatar_color: this.pendingAvatarColor || '#06b6d4',
         avatar_url: this.pendingAvatarUrl || null,
         updated_at: new Date().toISOString()
