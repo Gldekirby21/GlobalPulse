@@ -241,6 +241,9 @@ class GlobalPulseApp {
       compareView.init();
     } else if (tabId === 'saved') {
       this.renderFavoritesGrid();
+    } else if (tabId === 'chat') {
+      chatPanel.renderConversationList();
+      chatPanel.renderRequests();
     }
   }
 

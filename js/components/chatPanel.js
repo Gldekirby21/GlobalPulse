@@ -350,18 +350,80 @@ class ChatPanel {
         const box = document.getElementById('chatConversations');
         const pageBox = document.getElementById('messengerConvosList');
 
+        if (!supabaseService.user) {
+            const notAuthHtml = `
+              <div class="messenger-auth-prompt" style="padding:2.5rem 1.25rem; text-align:center; display:flex; flex-direction:column; align-items:center;">
+                <div style="width:56px; height:56px; border-radius:50%; background:rgba(6, 182, 212, 0.12); border:1.5px solid var(--accent-cyan); display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--accent-cyan); margin-bottom:1rem;">
+                  <i class="fa-solid fa-lock"></i>
+                </div>
+                <h4 style="font-size:1.05rem; font-weight:800; color:var(--text-primary); margin-bottom:0.4rem;">Sign in to Chat</h4>
+                <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1.25rem; line-height:1.4;">Connect and exchange travel tips with travelers around the world.</p>
+                <button type="button" class="btn-primary btn-sm" id="btnMessengerAuth" style="font-weight:800; padding:0.5rem 1.25rem; border-radius:var(--radius-full);">
+                  <i class="fa-solid fa-right-to-bracket"></i> Sign In / Register
+                </button>
+              </div>`;
+            if (box) box.innerHTML = notAuthHtml;
+            if (pageBox) {
+                pageBox.innerHTML = notAuthHtml;
+                pageBox.querySelectorAll('#btnMessengerAuth').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        window.globalPulseApp?.authModal?.open('signin');
+                    });
+                });
+            }
+            return;
+        }
+
         const convos = await this.loadConversations();
         this.updateBadge();
 
         if (!convos.length) {
+            // Fetch online/active community users to suggest starting a conversation
+            let suggestedList = [
+                { id: 'mock_u1', username: 'Aoi Tanaka', avatar_color: '#ec4899', home_country: 'Japan' },
+                { id: 'mock_u2', username: 'Marco Rivera', avatar_color: '#06b6d4', home_country: 'Philippines' },
+                { id: 'mock_u3', username: 'Elena Rostova', avatar_color: '#8b5cf6', home_country: 'France' }
+            ];
+
+            if (supabaseService.configured) {
+                const { data: travelers } = await supabaseService.client
+                    .from('profiles')
+                    .select('id, username, full_name, avatar_url, avatar_color, home_country')
+                    .neq('id', supabaseService.user.id)
+                    .limit(8);
+                if (travelers && travelers.length) suggestedList = travelers;
+            }
+
             const emptyHtml = `
-        <div class="community-empty" style="padding:2rem 1rem; text-align:center; color:var(--text-muted); font-size:0.84rem;">
-          <i class="fa-solid fa-comments" style="font-size:1.8rem; opacity:0.4; margin-bottom:0.5rem; display:block;"></i>
-          No conversations yet.<br/>
-          Click an explorer in the community or feed to start chatting!
-        </div>`;
+              <div style="padding:1rem 0.5rem;">
+                <div style="padding:0.5rem; text-align:center; color:var(--text-muted); font-size:0.82rem; margin-bottom:0.75rem;">
+                  <i class="fa-solid fa-paper-plane" style="font-size:1.5rem; color:var(--accent-cyan); margin-bottom:0.35rem; display:block;"></i>
+                  Start a new conversation with explorers:
+                </div>
+                <div style="display:flex; flex-direction:column; gap:0.45rem;">
+                  ${suggestedList.map((t) => `
+                    <button class="chat-convo-row" data-peer="${t.id}">
+                      <span class="avatar-dot" style="--avatar:${t.avatar_color || '#06b6d4'}; width:36px; height:36px; font-size:0.85rem;">
+                        ${(t.username || '?').charAt(0).toUpperCase()}
+                      </span>
+                      <span class="chat-convo-info">
+                        <strong>${t.full_name || t.username}</strong>
+                        <small>📍 ${t.home_country || 'World Explorer'} &bull; Say hi 👋</small>
+                      </span>
+                      <i class="fa-solid fa-comment-dots" style="color:var(--accent-cyan); font-size:0.85rem;"></i>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>`;
+
             if (box) box.innerHTML = emptyHtml;
             if (pageBox) pageBox.innerHTML = emptyHtml;
+
+            [box, pageBox].forEach((c) => {
+                c?.querySelectorAll('.chat-convo-row').forEach((row) =>
+                    row.addEventListener('click', () => this.openWith(row.dataset.peer))
+                );
+            });
             return;
         }
 
@@ -381,7 +443,7 @@ class ChatPanel {
             const time = new Date(last.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             return `
         <button class="chat-convo-row" data-peer="${peerId}">
-          <span class="avatar-dot" style="--avatar:${color};">${name.charAt(0).toUpperCase()}</span>
+          <span class="avatar-dot" style="--avatar:${color}; width:38px; height:38px; font-size:0.9rem;">${name.charAt(0).toUpperCase()}</span>
           <span class="chat-convo-info">
             <strong>${name}</strong>
             <small>${last.body.slice(0, 40)}${last.body.length > 40 ? '…' : ''}</small>
