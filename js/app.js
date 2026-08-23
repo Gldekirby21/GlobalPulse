@@ -176,13 +176,24 @@ class GlobalPulseApp {
         this.switchTab(targetTab);
       });
     });
+
+    // Browser back/forward support via URL hash
+    window.addEventListener('hashchange', () => {
+      const tab = location.hash.replace('#', '');
+      if (tab && tab !== this.activeTab && document.getElementById(`view-${tab}`)) {
+        this.switchTab(tab);
+      }
+    });
   }
 
   switchTab(tabId) {
     this.activeTab = tabId;
 
-    // Remember position across reloads
+    // Remember position across reloads (localStorage + URL hash)
     try { localStorage.setItem('globalpulse_tab', tabId); } catch (e) { /* storage blocked */ }
+    if (location.hash !== '#' + tabId) {
+      history.replaceState(null, '', '#' + tabId);
+    }
 
     // Update Nav Buttons
     document.querySelectorAll('[data-tab]').forEach(btn => {
@@ -225,6 +236,9 @@ class GlobalPulseApp {
 
       // 2. Detect User IP Geolocation
       this.detectUserLocation();
+
+      // Re-assert restored tab in case any loader flipped sections
+      this.restoreLastTab();
     } catch (err) {
       console.error('Error during initial load:', err);
     }
@@ -410,12 +424,8 @@ class GlobalPulseApp {
       if (mapManager.map) {
         mapManager.setUserLocation(geo.lat, geo.lon, `Your Location: ${geo.city}, ${geo.country}`);
       }
-    } catch (err) {
-      const reason =
-        err && err.code === 1 ? 'permission denied' :
-          err && err.code === 3 ? 'timed out' :
-            (err && err.message) || 'unavailable';
-      console.info('Precise GPS not used — staying with IP-based location:', reason);
+    } catch (_) {
+      // Fallback seamlessly to accurate IP-based location without spamming console
     }
   }
 
@@ -678,10 +688,19 @@ class GlobalPulseApp {
    * Supabase Community Location Sharing
    */
   setupCommunitySharing() {
-    // Provide current coordinates provider
-    supabaseService.setCoordsProvider(() => this.userLocation);
+    // Provide location coordinates to Supabase service
+    supabaseService.setCoordsProvider(() => {
+      if (!this.userLocation) return null;
+      return {
+        lat: this.userLocation.lat,
+        lon: this.userLocation.lon,
+        city: this.userLocation.city,
+        country: this.userLocation.country,
+        countryCode: this.userLocation.countryCode
+      };
+    });
 
-    // Toggle button on Map Sidebar
+    // Wire Community Panel Toggle button
     const toggleBtn = document.getElementById('communityToggleBtn');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', () => {
@@ -696,8 +715,8 @@ class GlobalPulseApp {
       });
     }
 
-    // Auth callbacks
-    authModal.onAuthStateChanged = (session) => {
+    // Consolidated Auth Change Handler
+    const handleAuthChange = (session) => {
       authModal.renderAuthArea(session);
       chatPanel.setSession(session);
       this.renderFavoritesGrid();
@@ -712,25 +731,16 @@ class GlobalPulseApp {
       }
     };
 
+    authModal.onAuthStateChanged = handleAuthChange;
+
     authModal.onSharingChanged = () => {
-      // Re-trigger location updates
       if (supabaseService.user && supabaseService.sharingEnabled) {
-        supabaseService.publishLocation();
+        supabaseService.publishLocation(true);
       }
     };
 
-    // Initialize Supabase session
-    supabaseService.init((session) => {
-      authModal.renderAuthArea(session);
-      chatPanel.setSession(session);
-      this.renderFavoritesGrid();
-      countriesView.render();
-      if (session) {
-        passport.refresh();
-        supabaseService.publishLocation();
-        supabaseService.startHeartbeat();
-      }
-    });
+    // Initialize Supabase session with consolidated callback
+    supabaseService.init(handleAuthChange);
 
     // Chat / Friends drawer
     chatPanel.init();

@@ -24,6 +24,7 @@ export const BADGES = {
     globetrotter_1000km: { icon: 'fa-route', label: 'Long Hauler' }
 };
 
+// Alias so any module can import the catalog under either name
 export const gamificationBadges = BADGES;
 
 class GamificationService {

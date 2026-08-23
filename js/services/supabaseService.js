@@ -17,8 +17,20 @@ const AVATAR_COLORS = [
 ];
 
 const PRESENCE_WINDOW_MS = 2 * 60 * 1000; // "live" = seen in the last 2 min
-const HEARTBEAT_MS = 30 * 1000;
+const HEARTBEAT_MS = 60 * 1000; // Throttle presence refresh to once per 60s
 const CITY_GRID_DEG = 0.05; // ~5.5 km
+
+const safeStorage = {
+    getItem: (key) => {
+        try { return localStorage.getItem(key); } catch (e) { return null; }
+    },
+    setItem: (key, value) => {
+        try { localStorage.setItem(key, value); } catch (e) {}
+    },
+    removeItem: (key) => {
+        try { localStorage.removeItem(key); } catch (e) {}
+    }
+};
 
 class SupabaseService {
     constructor() {
@@ -30,17 +42,27 @@ class SupabaseService {
         this._coordsProvider = null; // () => { lat, lon, city, country, countryCode } | null
         this._onLocationsChange = null;
         this._onAuthChange = null;
+        this._lastPublishedHash = null;
+        this._lastPublishedTime = 0;
 
-        this.sharingEnabled = localStorage.getItem('globalpulse_sharing') !== 'false';
-        this.precisionMode = localStorage.getItem('globalpulse_precision') || 'precise';
+        this.sharingEnabled = safeStorage.getItem('globalpulse_sharing') !== 'false';
+        this.precisionMode = safeStorage.getItem('globalpulse_precision') || 'precise';
 
         if (isSupabaseConfigured() && window.supabase) {
             this.client = window.supabase.createClient(
                 config.supabase.url,
-                config.supabase.anonKey
+                config.supabase.anonKey,
+                {
+                    auth: {
+                        storage: safeStorage,
+                        persistSession: true,
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true
+                    }
+                }
             );
         } else if (isSupabaseConfigured()) {
-            console.warn('Supabase credentials set, but the supabase-js CDN script is missing.');
+            console.warn('Supabase credentials set, but the supabase-js library is missing.');
         }
     }
 
@@ -228,12 +250,19 @@ class SupabaseService {
         return { lat: round(lat), lon: round(lon) };
     }
 
-    async publishLocation() {
+    async publishLocation(force = false) {
         if (!this.configured || !this.user || !this.sharingEnabled) return false;
         const raw = this._coordsProvider?.();
         if (!raw || !Number.isFinite(raw.lat) || !Number.isFinite(raw.lon)) return false;
 
         const { lat, lon } = this._roundForPrecision(raw.lat, raw.lon);
+        const hash = `${lat.toFixed(4)}_${lon.toFixed(4)}_${raw.city || ''}_${this.precisionMode}`;
+        const now = Date.now();
+
+        // Throttle: don't re-upload if coordinates are unchanged and published recently
+        if (!force && hash === this._lastPublishedHash && (now - this._lastPublishedTime < 45000)) {
+            return true;
+        }
 
         const { error } = await this.client
             .from('user_locations')
@@ -253,6 +282,8 @@ class SupabaseService {
             console.warn('Location publish failed:', error.message);
             return false;
         }
+        this._lastPublishedHash = hash;
+        this._lastPublishedTime = now;
         return true;
     }
 
