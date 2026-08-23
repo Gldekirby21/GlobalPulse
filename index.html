@@ -104,13 +104,14 @@
           <span class="pulse-dot"></span>
           <span>Detecting IP...</span>
         </button>
+        <button class="icon-btn" id="themeToggleBtn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+          <i class="fa-solid fa-sun"></i>
+        </button>
         <button class="icon-btn" id="signInBtn" title="Sign In to Community" aria-label="Sign In">
           <i class="fa-solid fa-right-to-bracket"></i>
         </button>
         <div class="account-chip-wrap" id="accountChipWrap" hidden></div>
-        <button class="icon-btn" id="themeToggleBtn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
-          <i class="fa-solid fa-sun"></i>
-        </button>
+
       </div>
     </div>
   </header>
@@ -533,15 +534,21 @@
       </div>
       <div class="auth-error" id="authError" style="display:none;"></div>
       <form id="signInForm">
-        <input class="auth-input" type="email" id="signInEmail" placeholder="Email address" autocomplete="email" required />
-        <input class="auth-input" type="password" id="signInPassword" placeholder="Password" autocomplete="current-password" required />
+        <input class="auth-input" type="email" id="signInEmail" placeholder="Email address" autocomplete="email"
+          required />
+        <input class="auth-input" type="password" id="signInPassword" placeholder="Password"
+          autocomplete="current-password" required />
         <button class="auth-submit-btn" type="submit"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>
       </form>
       <form id="signUpForm" hidden>
-        <input class="auth-input" type="text" id="signUpUsername" placeholder="Display name" maxlength="24" autocomplete="username" required />
-        <input class="auth-input" type="email" id="signUpEmail" placeholder="Email address" autocomplete="email" required />
-        <input class="auth-input" type="password" id="signUpPassword" placeholder="Password (min 6 chars)" autocomplete="new-password" required />
-        <input class="auth-input" type="password" id="signUpPassword2" placeholder="Confirm password" autocomplete="new-password" required />
+        <input class="auth-input" type="text" id="signUpUsername" placeholder="Display name" maxlength="24"
+          autocomplete="username" required />
+        <input class="auth-input" type="email" id="signUpEmail" placeholder="Email address" autocomplete="email"
+          required />
+        <input class="auth-input" type="password" id="signUpPassword" placeholder="Password (min 6 chars)"
+          autocomplete="new-password" required />
+        <input class="auth-input" type="password" id="signUpPassword2" placeholder="Confirm password"
+          autocomplete="new-password" required />
         <button class="auth-submit-btn" type="submit"><i class="fa-solid fa-user-plus"></i> Create Account</button>
       </form>
       <div class="auth-divider"><span>or</span></div>
