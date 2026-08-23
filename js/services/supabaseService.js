@@ -127,11 +127,18 @@ class SupabaseService {
     }
 
     async signInWithGoogle() {
-        const { error } = await this.client.auth.signInWithOAuth({
+        const redirectUrl = window.location.origin.includes('localhost')
+            ? window.location.origin + '/'
+            : 'https://global-pulse-lemon-two.vercel.app/';
+
+        const { data, error } = await this.client.auth.signInWithOAuth({
             provider: 'google',
-            options: { redirectTo: window.location.origin + window.location.pathname }
+            options: {
+                redirectTo: redirectUrl
+            }
         });
         if (error) throw error;
+        return data;
     }
 
     async signOut() {

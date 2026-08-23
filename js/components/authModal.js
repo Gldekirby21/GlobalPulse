@@ -46,8 +46,20 @@ class AuthModal {
             this.handleSignUp();
         });
 
-        document.getElementById('googleSignInBtn')?.addEventListener('click', () => {
-            supabaseService.signInWithGoogle().catch((err) => this.showError(err.message));
+        document.getElementById('googleSignInBtn')?.addEventListener('click', async () => {
+            this.setLoading(true);
+            try {
+                await supabaseService.signInWithGoogle();
+            } catch (err) {
+                const msg = err?.message || '';
+                if (/provider is not enabled|unsupported provider/i.test(msg)) {
+                    this.showError('⚙️ Hindi pa naka-enable ang Google Provider sa Supabase Dashboard. Pwede kang gumamit muna ng Email & Password Sign Up/Sign In!');
+                } else {
+                    this.showError(this.friendlyError(err));
+                }
+            } finally {
+                this.setLoading(false);
+            }
         });
 
         // --- Account dropdown (delegated — chip is re-rendered dynamically) ---
