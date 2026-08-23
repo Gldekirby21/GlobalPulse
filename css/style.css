@@ -1778,40 +1778,54 @@ img {
 
 /* Mobile / Phone Only (<= 768px) */
 @media (max-width: 768px) {
-  /* Hide top header nav-tabs on phones */
-  .site-header .nav-tabs {
-    display: none !important;
-  }
-
+  /* Sticky Top Header on Phones */
   .site-header {
+    position: sticky !important;
+    top: 0 !important;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1100;
     height: 58px;
     min-height: 58px;
     padding: 0;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-glass-strong);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Hide top horizontal nav-tabs on phones */
+  .site-header .nav-tabs {
+    display: none !important;
   }
 
   .nav-content {
     flex-wrap: nowrap;
     justify-content: space-between;
+    width: 100%;
   }
 
-  /* Add bottom padding to page to prevent overlap with bottom nav bar */
+  /* Prevent page content from being covered by bottom nav bar */
   body {
-    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
-  /* Mobile Bottom Nav Bar */
+  /* Sticky Fixed Bottom Navigation Bar (Phone Only) */
   .mobile-bottom-nav {
     display: flex !important;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100%;
     height: calc(62px + env(safe-area-inset-bottom, 0px));
     background: var(--bg-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid var(--border-glass-strong);
-    z-index: 1000;
+    z-index: 1100;
     justify-content: space-around;
     align-items: center;
     padding: 0 0.25rem env(safe-area-inset-bottom, 0px);
@@ -1824,7 +1838,7 @@ img {
     align-items: center;
     justify-content: center;
     gap: 0.22rem;
-    padding: 0.35rem 0.3rem;
+    padding: 0.35rem 0.25rem;
     font-size: 0.68rem;
     color: var(--text-muted);
     font-weight: 600;
@@ -1832,6 +1846,8 @@ img {
     transition: all var(--transition-fast);
     flex: 1;
     cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .mob-nav-item i {
